@@ -57,7 +57,7 @@
     display:flex;align-items:center;justify-content:center;font-size:12px;
   }
 
-  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px;}
   @media(max-width:760px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 
   .dyn-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
@@ -151,16 +151,16 @@
     <div id="planForm">
       <div class="section-title"><span class="num">1</span> Mục tiêu hôm nay</div>
       <div class="kpi-grid">
-        <div class="field"><label>TK CNKD</label><input type="number" id="kpiTkCnkd" min="0" placeholder="0"></div>
+        <div class="field"><label>TK HKD</label><input type="number" id="kpiTkHkd" min="0" placeholder="0"></div>
         <div class="field"><label>CC</label><input type="number" id="kpiCc" min="0" placeholder="0"></div>
-        <div class="field"><label>CD</label><input type="number" id="kpiCd" min="0" placeholder="0"></div>
         <div class="field"><label>TD</label><input type="number" id="kpiTd" min="0" placeholder="0"></div>
+        <div class="field"><label>UPL</label><input type="number" id="kpiUpl" min="0" placeholder="0"></div>
+        <div class="field"><label>PHÍ</label><input type="number" id="kpiPhi" min="0" placeholder="0"></div>
       </div>
       <div class="field"><label>Pipeline / Tên KH cụ thể (nếu có)</label><textarea id="kpiPipeline" rows="2" placeholder="VD: CC - Anh A, Cty XYZ..."></textarea></div>
 
       <div class="section-title"><span class="num">2</span> Lịch làm việc cụ thể ngày</div>
       <div id="scheduleRows"></div>
-      <button class="add-row-btn" id="addScheduleRow">+ Thêm khung giờ</button>
     </div>
 
     <!-- EOD FORM -->
@@ -261,7 +261,14 @@ let currentType = 'plan';
 let editingId = null;
 
 let draft = {
-  schedule: [{from:'',to:'',task:''}],
+  schedule: [
+    {label:'8H - 9H',task:''},
+    {label:'9H - 10H',task:''},
+    {label:'10H - 12H',task:''},
+    {label:'13H30 - 14H30',task:''},
+    {label:'14H30 - 16H',task:''},
+    {label:'16H - 17H30',task:''}
+  ],
   achieved: [''],
   notAchieved: [''],
   reasons: [''],
@@ -294,11 +301,8 @@ function renderScheduleRows(){
   const el = document.getElementById('scheduleRows');
   el.innerHTML = draft.schedule.map((row,i)=>`
     <div class="dyn-row">
-      <input type="time" data-kind="schedule" data-field="from" data-i="${i}" value="${row.from}">
-      <span class="arrow">→</span>
-      <input type="time" data-kind="schedule" data-field="to" data-i="${i}" value="${row.to}">
+      <div style="width:150px;flex-shrink:0;font-size:13px;font-weight:700;color:var(--indigo);">${escapeHtml(row.label)}</div>
       <input type="text" data-kind="schedule" data-field="task" data-i="${i}" placeholder="Nội dung công việc" value="${escapeHtml(row.task)}">
-      <button class="dyn-remove" data-kind="schedule" data-i="${i}" title="Xóa">✕</button>
     </div>`).join('');
 }
 function renderBulletRows(containerId, arrKey, placeholder){
@@ -336,11 +340,7 @@ document.addEventListener('click', (e)=>{
   if(t.classList && t.classList.contains('dyn-remove')){
     const kind = t.dataset.kind;
     const i = Number(t.dataset.i);
-    if(kind==='schedule'){
-      draft.schedule.splice(i,1);
-      if(draft.schedule.length===0) draft.schedule.push({from:'',to:'',task:''});
-      renderScheduleRows();
-    } else {
+    if(kind!=='schedule'){
       draft[kind].splice(i,1);
       if(draft[kind].length===0) draft[kind].push('');
       const map = {achieved:['achievedRows','VD: 1 CC active'], notAchieved:['notAchievedRows','VD: Chưa đạt HKD'], reasons:['reasonRows','VD: CNKD hẹn lại'], actions:['actionRows','VD: Tìm nguồn CTV, MGM khách mới']};
@@ -349,10 +349,6 @@ document.addEventListener('click', (e)=>{
   }
 });
 
-document.getElementById('addScheduleRow').addEventListener('click', ()=>{
-  draft.schedule.push({from:'',to:'',task:''});
-  renderScheduleRows();
-});
 document.getElementById('addAchievedRow').addEventListener('click', ()=>{ draft.achieved.push(''); renderBulletRows('achievedRows','achieved','VD: 1 CC active'); });
 document.getElementById('addNotAchievedRow').addEventListener('click', ()=>{ draft.notAchieved.push(''); renderBulletRows('notAchievedRows','notAchieved','VD: Chưa đạt HKD'); });
 document.getElementById('addReasonRow').addEventListener('click', ()=>{ draft.reasons.push(''); renderBulletRows('reasonRows','reasons','VD: CNKD hẹn lại'); });
@@ -381,11 +377,12 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 });
 
 function resetDraft(){
-  draft = { schedule:[{from:'',to:'',task:''}], achieved:[''], notAchieved:[''], reasons:[''], actions:[''] };
-  document.getElementById('kpiTkCnkd').value='';
+  draft = { schedule:[{label:'8H - 9H',task:''},{label:'9H - 10H',task:''},{label:'10H - 12H',task:''},{label:'13H30 - 14H30',task:''},{label:'14H30 - 16H',task:''},{label:'16H - 17H30',task:''}], achieved:[''], notAchieved:[''], reasons:[''], actions:[''] };
+  document.getElementById('kpiTkHkd').value='';
   document.getElementById('kpiCc').value='';
-  document.getElementById('kpiCd').value='';
   document.getElementById('kpiTd').value='';
+  document.getElementById('kpiUpl').value='';
+  document.getElementById('kpiPhi').value='';
   document.getElementById('kpiPipeline').value='';
   renderAllDynamic();
 }
@@ -424,14 +421,15 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
 
   let record;
   if(currentType==='plan'){
-    const schedule = draft.schedule.filter(r=>r.from||r.to||r.task.trim());
+    const schedule = draft.schedule.map(r=>({label:r.label, task:r.task.trim()})).filter(r=>r.task);
     record = {
       id: editingId || uid(), type:'plan', employee, team: teamOf(employee), date,
       targets:{
-        tkCnkd: document.getElementById('kpiTkCnkd').value,
+        tkHkd: document.getElementById('kpiTkHkd').value,
         cc: document.getElementById('kpiCc').value,
-        cd: document.getElementById('kpiCd').value,
         td: document.getElementById('kpiTd').value,
+        upl: document.getElementById('kpiUpl').value,
+        phi: document.getElementById('kpiPhi').value,
       },
       pipeline: document.getElementById('kpiPipeline').value.trim(),
       schedule
@@ -502,7 +500,7 @@ function renderReportsList(){
   grid.innerHTML = list.map(r=>{
     if(r.type==='plan'){
       const t = r.targets||{};
-      const scheduleHtml = (r.schedule||[]).map(s=>`<li>${escapeHtml(s.from||'')}${s.to?('–'+escapeHtml(s.to)):''}: ${escapeHtml(s.task||'')}</li>`).join('');
+      const scheduleHtml = (r.schedule||[]).map(s=>`<li><b>${escapeHtml(s.label||'')}</b>: ${escapeHtml(s.task||'')}</li>`).join('');
       return `<div class="report-card plan">
         <div class="rc-head">
           <div><div class="rc-title">📊 DAILY PLAN ngày ${fmtDateLabel(r.date)} - ${escapeHtml(shortName(r.employee))}</div>
@@ -512,10 +510,11 @@ function renderReportsList(){
         <div class="rc-body">
           <div class="blk">
             <div class="blk-title">1️⃣ Mục tiêu hôm nay</div>
-            <div class="kpi-line"><span>TK CNKD</span><b>${escapeHtml(t.tkCnkd||'0')}</b></div>
+            <div class="kpi-line"><span>TK HKD</span><b>${escapeHtml(t.tkHkd||t.tkCnkd||'0')}</b></div>
             <div class="kpi-line"><span>CC</span><b>${escapeHtml(t.cc||'0')}</b></div>
-            <div class="kpi-line"><span>CD</span><b>${escapeHtml(t.cd||'0')}</b></div>
             <div class="kpi-line"><span>TD</span><b>${escapeHtml(t.td||'0')}</b></div>
+            <div class="kpi-line"><span>UPL</span><b>${escapeHtml(t.upl||'0')}</b></div>
+            <div class="kpi-line"><span>PHÍ</span><b>${escapeHtml(t.phi||'0')}</b></div>
             ${r.pipeline ? `<div style="margin-top:6px;font-size:12px;color:var(--ink-soft);">Pipeline: ${escapeHtml(r.pipeline)}</div>` : ''}
           </div>
           <div class="blk">
@@ -581,12 +580,13 @@ function renderReportsList(){
         document.getElementById('planForm').style.display = '';
         document.getElementById('eodForm').style.display = 'none';
         document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo đầu ngày';
-        document.getElementById('kpiTkCnkd').value = r.targets?.tkCnkd || '';
+        document.getElementById('kpiTkHkd').value = r.targets?.tkHkd || r.targets?.tkCnkd || '';
         document.getElementById('kpiCc').value = r.targets?.cc || '';
-        document.getElementById('kpiCd').value = r.targets?.cd || '';
         document.getElementById('kpiTd').value = r.targets?.td || '';
+        document.getElementById('kpiUpl').value = r.targets?.upl || '';
+        document.getElementById('kpiPhi').value = r.targets?.phi || '';
         document.getElementById('kpiPipeline').value = r.pipeline || '';
-        draft.schedule = r.schedule && r.schedule.length ? JSON.parse(JSON.stringify(r.schedule)) : [{from:'',to:'',task:''}];
+        draft.schedule = [{label:'8H - 9H',task:''},{label:'9H - 10H',task:''},{label:'10H - 12H',task:''},{label:'13H30 - 14H30',task:''},{label:'14H30 - 16H',task:''},{label:'16H - 17H30',task:''}].map(slot=>{ const old=(r.schedule||[]).find(x=>x.label===slot.label); return old ? {...slot,task:old.task||''} : slot; });
       } else {
         document.getElementById('planForm').style.display = 'none';
         document.getElementById('eodForm').style.display = '';
@@ -625,18 +625,19 @@ function buildSummaryText(date){
     lines.push('');
     lines.push(`TEAM ${team}`);
     lines.push('-'.repeat(40));
-    const totals = {tkCnkd:0, cc:0, cd:0, td:0};
+    const totals = {tkHkd:0, cc:0, td:0, upl:0, phi:0};
     teamEmployees.forEach(emp=>{
       const plan = dayReports.find(r=>r.employee===emp.name && r.type==='plan');
       const eod = dayReports.find(r=>r.employee===emp.name && r.type==='eod');
       lines.push(`• ${emp.name}`);
       if(plan){
         const t = plan.targets || {};
-        totals.tkCnkd += Number(t.tkCnkd)||0;
+        totals.tkHkd += Number(t.tkHkd ?? t.tkCnkd)||0;
         totals.cc += Number(t.cc)||0;
-        totals.cd += Number(t.cd)||0;
         totals.td += Number(t.td)||0;
-        lines.push(`   Mục tiêu: TK CNKD ${t.tkCnkd||0} | CC ${t.cc||0} | CD ${t.cd||0} | TD ${t.td||0}`);
+        totals.upl += Number(t.upl)||0;
+        totals.phi += Number(t.phi)||0;
+        lines.push(`   Mục tiêu: TK HKD ${t.tkHkd ?? t.tkCnkd ?? 0} | CC ${t.cc||0} | TD ${t.td||0} | UPL ${t.upl||0} | PHÍ ${t.phi||0}`);
         if(plan.pipeline) lines.push(`   Pipeline: ${plan.pipeline}`);
       } else {
         lines.push('   Mục tiêu: chưa cập nhật');
@@ -651,7 +652,7 @@ function buildSummaryText(date){
       }
       lines.push('');
     });
-    lines.push(`Tổng mục tiêu Team ${team}: TK CNKD ${totals.tkCnkd} | CC ${totals.cc} | CD ${totals.cd} | TD ${totals.td}`);
+    lines.push(`Tổng mục tiêu Team ${team}: TK HKD ${totals.tkHkd} | CC ${totals.cc} | TD ${totals.td} | UPL ${totals.upl} | PHÍ ${totals.phi}`);
   });
   return lines.join('\n');
 }
