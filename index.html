@@ -874,6 +874,8 @@ FORM
 
     <select id="fEmployee">
 
+      <option value="" selected disabled>-- Chọn nhân viên --</option>
+
       <optgroup label="Team RMP" id="grpRMP"></optgroup>
 
       <optgroup label="Team LS" id="grpLS"></optgroup>
@@ -2394,6 +2396,12 @@ document
 ).value = '';
 
 
+document
+.getElementById(
+'fEmployee'
+).value = '';
+
+
 renderAllDynamic();
 
 }
@@ -2457,27 +2465,26 @@ renderAll();
 
 
 /* =====================================================
-SAVE REPORTS
+SAVE / DELETE ONE RECORD (không gửi cả mảng để tránh
+ghi đè mất báo cáo của người khác vừa nộp)
 ===================================================== */
 
-async function saveReports(){
+async function saveRecordRemote(record){
 
 try{
 
 await fetch(
 SHEET_API_URL,
 {
-
 method:'POST',
-
-body:
-JSON.stringify(
-reports
-)
-
+body: JSON.stringify({
+action:'save',
+record: record
+})
 }
 );
 
+return true;
 
 }catch(e){
 
@@ -2486,10 +2493,46 @@ console.error(
 e
 );
 
-
 alert(
 'Không lưu được lên Google Sheet. Kiểm tra kết nối mạng và thử lại.'
 );
+
+return false;
+
+}
+
+}
+
+
+async function deleteRecordRemote(id){
+
+try{
+
+await fetch(
+SHEET_API_URL,
+{
+method:'POST',
+body: JSON.stringify({
+action:'delete',
+id: id
+})
+}
+);
+
+return true;
+
+}catch(e){
+
+console.error(
+'Delete error',
+e
+);
+
+alert(
+'Không xóa được trên Google Sheet. Kiểm tra kết nối mạng và thử lại.'
+);
+
+return false;
 
 }
 
@@ -2533,6 +2576,18 @@ return;
 }
 
 
+/*
+Xác định id: nếu đang bấm "Sửa" trên 1 báo cáo cụ thể thì
+dùng editingId để cập nhật đúng bản đó. Nếu tạo mới (kể cả
+trùng nhân viên + ngày + loại với báo cáo đã có) thì LUÔN
+tạo id mới — ghi nhận thêm một bản ghi riêng, không đè lên
+bản cũ, để giữ lại toàn bộ lịch sử các lần nộp trong ngày.
+*/
+
+let recordId =
+editingId || uid();
+
+
 let record;
 
 
@@ -2557,10 +2612,7 @@ r => r.task
 
 record = {
 
-id:
-editingId
-||
-uid(),
+id: recordId,
 
 type:'plan',
 
@@ -2570,6 +2622,8 @@ team:
 teamOf(employee),
 
 date,
+
+submittedAt: new Date().toISOString(),
 
 targets:{
 
@@ -2621,10 +2675,7 @@ else{
 
 record = {
 
-id:
-editingId
-||
-uid(),
+id: recordId,
 
 type:'eod',
 
@@ -2634,6 +2685,8 @@ team:
 teamOf(employee),
 
 date,
+
+submittedAt: new Date().toISOString(),
 
 achieved:
 draft.achieved
@@ -2664,35 +2717,17 @@ s => s.trim()
 }
 
 
-if(editingId){
+/* cập nhật tạm trên UI trước cho mượt */
 
-reports =
-reports.map(
-r =>
-r.id === editingId
-? record
-: r
+const idx =
+reports.findIndex(
+r => r.id === recordId
 );
 
-}
-
-else{
-
-reports =
-reports.filter(
-r =>
-!(
-r.employee === employee &&
-r.date === date &&
-r.type === currentType
-)
-);
-
-
-reports.push(
-record
-);
-
+if(idx >= 0){
+  reports[idx] = record;
+}else{
+  reports.push(record);
 }
 
 
@@ -2700,13 +2735,20 @@ editingId =
 null;
 
 
-await saveReports();
+renderAll();
+
+
+/* gửi đúng 1 bản ghi lên Sheet — không đụng tới các bản ghi khác */
+
+await saveRecordRemote(record);
 
 
 resetDraft();
 
 
-renderAll();
+/* đồng bộ lại từ Sheet để chắc chắn khớp với mọi người */
+
+await loadReports();
 
 });
 
@@ -3376,17 +3418,37 @@ b.addEventListener(
 'click',
 async ()=>{
 
+if(!isManagerUnlocked) return;
+
+const id =
+b.dataset.id;
+
+if(
+!confirm(
+'Xác nhận xóa báo cáo này? Hành động này không thể hoàn tác.'
+)
+) return;
+
+/* cập nhật UI ngay */
+
 reports =
 reports.filter(
 r =>
-r.id !==
-b.dataset.id
+r.id !== id
 );
 
 
-await saveReports();
-
 renderAll();
+
+
+/* xóa đúng bản ghi này trên Sheet */
+
+await deleteRecordRemote(id);
+
+
+/* đồng bộ lại để chắc chắn */
+
+await loadReports();
 
 });
 
@@ -3813,6 +3875,36 @@ renderStatusTable
 5 PIE CHARTS
 ===================================================== */
 
+/*
+Lấy bản ghi MỚI NHẤT cho mỗi (nhân viên + ngày + loại báo cáo),
+dùng riêng cho các phần TỔNG HỢP (KPI, báo cáo tổng, pie chart)
+để không bị cộng trùng khi 1 người nộp nhiều lần trong ngày.
+Phần "Báo cáo đã ghi nhận" vẫn hiển thị đầy đủ mọi lần nộp,
+không dùng hàm này.
+*/
+function getLatestRecords(){
+
+const map = new Map();
+
+reports.forEach(r=>{
+
+const key = r.employee + '|' + r.date + '|' + r.type;
+const existing = map.get(key);
+
+if(
+!existing ||
+(r.submittedAt || '') >= (existing.submittedAt || '')
+){
+map.set(key, r);
+}
+
+});
+
+return Array.from(map.values());
+
+}
+
+
 function getSummaryTargetTotals(date){
 
 const totals = {
@@ -3820,7 +3912,7 @@ RMP:{tkHkd:0,cc:0,td:0,upl:0,phi:0},
 LS:{tkHkd:0,cc:0,td:0,upl:0,phi:0}
 };
 
-reports
+getLatestRecords()
 .filter(r => r.date === date && r.type === 'plan')
 .forEach(plan => {
 
@@ -3909,11 +4001,13 @@ todayStr();
 
 
 /*
-CHỈ LẤY BÁO CÁO ĐẦU NGÀY
+CHỈ LẤY BÁO CÁO ĐẦU NGÀY — dùng bản mới nhất mỗi người
+để đếm số người đã nộp không bị lệch khi có người nộp
+nhiều lần trong ngày
 */
 
 const plans =
-reports.filter(
+getLatestRecords().filter(
 r =>
 r.date === date
 &&
@@ -4350,8 +4444,10 @@ BUILD SUMMARY TEXT
 
 function buildSummaryText(date){
 
+/* Chỉ lấy bản mới nhất mỗi người để tổng hợp,
+tránh liệt kê/tính trùng khi ai đó nộp nhiều lần */
 const dayReports =
-reports.filter(
+getLatestRecords().filter(
 r =>
 r.date === date
 );
