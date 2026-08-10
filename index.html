@@ -3,890 +3,5028 @@
 <head>
 <meta charset="UTF-8" />
 <title>Báo Cáo Workload Hàng Ngày</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
 <style>
-  :root{
-    --bg:#F2F7F4; --surface:#FFFFFF; --ink:#173226; --ink-soft:#5B7166; --line:#DCE8E1;
-    --indigo:#00733C; --indigo-soft:#E2F4E9; --teal:#B4880B; --teal-soft:#FBF1DA;
-    --amber:#D97706; --amber-soft:#FEF3E2; --green:#00A651; --green-soft:#E2F4E9;
-    --red:#A6192E; --red-soft:#FBE9EC; --radius:14px;
+:root{
+  --bg:#F2F7F4;
+  --surface:#FFFFFF;
+  --ink:#173226;
+  --ink-soft:#5B7166;
+  --line:#DCE8E1;
+
+  --indigo:#00733C;
+  --indigo-soft:#E2F4E9;
+
+  --teal:#B4880B;
+  --teal-soft:#FBF1DA;
+
+  --amber:#D97706;
+  --amber-soft:#FEF3E2;
+
+  --green:#00A651;
+  --green-soft:#E2F4E9;
+
+  --red:#A6192E;
+  --red-soft:#FBE9EC;
+
+  --radius:14px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  padding:32px 22px 90px;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+}
+
+.eyebrow{
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--teal);
+  font-weight:700;
+  margin:0 0 6px;
+}
+
+h1{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:27px;
+  margin:0;
+  color:var(--indigo);
+}
+
+.subtitle{
+  color:var(--ink-soft);
+  font-size:14px;
+  margin-top:6px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  gap:16px;
+  margin-bottom:22px;
+}
+
+.today-pill{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:8px 16px;
+  font-size:13px;
+  color:var(--ink-soft);
+  font-weight:600;
+}
+
+
+/* =====================================================
+SUMMARY
+===================================================== */
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:22px;
+}
+
+@media(max-width:860px){
+  .summary{
+    grid-template-columns:repeat(2,1fr);
   }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;padding:32px 22px 90px;}
-  .wrap{max-width:1180px;margin:0 auto;}
-  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700;margin:0 0 6px;}
-  h1{font-family:'Space Grotesk',sans-serif;font-size:27px;margin:0;color:var(--indigo);}
-  .subtitle{color:var(--ink-soft);font-size:14px;margin-top:6px;}
-  .topbar{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:22px;}
-  .today-pill{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;color:var(--ink-soft);font-weight:600;}
+}
 
-  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
-  @media(max-width:860px){.summary{grid-template-columns:repeat(2,1fr);}}
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 18px;}
-  .card .label{font-size:11.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
-  .card .value{font-family:'Space Grotesk',sans-serif;font-size:23px;font-weight:700;margin-top:4px;color:var(--indigo);}
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:15px 18px;
+}
 
-  .tabs{display:flex;gap:8px;margin-bottom:18px;}
-  .tab-btn{
-    padding:10px 20px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
-    color:var(--ink-soft);font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;
+.card .label{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+
+.card .value{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:23px;
+  font-weight:700;
+  margin-top:4px;
+  color:var(--indigo);
+}
+
+
+/* =====================================================
+TABS
+===================================================== */
+
+.tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:18px;
+}
+
+.tab-btn{
+  padding:10px 20px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--ink-soft);
+  font-weight:700;
+  font-size:13.5px;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+}
+
+.tab-btn.active{
+  background:var(--indigo);
+  border-color:var(--indigo);
+  color:#fff;
+}
+
+
+/* =====================================================
+PANEL
+===================================================== */
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px;
+  margin-bottom:20px;
+}
+
+.panel h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;
+  margin:0 0 4px;
+  color:var(--ink);
+}
+
+.panel .sec-hint{
+  color:var(--ink-soft);
+  font-size:12.5px;
+  margin:0 0 14px;
+}
+
+.panel-head-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+
+/* =====================================================
+FIELDS
+===================================================== */
+
+.top-fields{
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  gap:14px;
+  margin-bottom:20px;
+}
+
+@media(max-width:700px){
+  .top-fields{
+    grid-template-columns:1fr;
   }
-  .tab-btn.active{background:var(--indigo);border-color:var(--indigo);color:#fff;}
+}
 
-  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:20px;}
-  .panel h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 4px;color:var(--ink);}
-  .panel .sec-hint{color:var(--ink-soft);font-size:12.5px;margin:0 0 14px;}
+.field label{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  color:var(--ink-soft);
+  margin-bottom:5px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
 
-  .panel-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  color:var(--ink);
+  background:#fff;
+}
 
-  .top-fields{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:20px;}
-  @media(max-width:700px){.top-fields{grid-template-columns:1fr;}}
-  .field label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em;}
-  .field input, .field select, .field textarea{
-    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
-    font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);background:#fff;
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  outline:2px solid var(--teal);
+  outline-offset:1px;
+}
+
+
+/* =====================================================
+SECTION
+===================================================== */
+
+.section-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  color:var(--indigo);
+  margin:20px 0 12px;
+}
+
+.section-title .num{
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  background:var(--indigo-soft);
+  color:var(--indigo);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+}
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+
+@media(max-width:760px){
+  .kpi-grid{
+    grid-template-columns:repeat(2,1fr);
   }
-  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--teal);outline-offset:1px;}
+}
 
-  .section-title{
-    display:flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;
-    font-weight:700;font-size:14px;color:var(--indigo);margin:20px 0 12px;
+
+/* =====================================================
+DYNAMIC ROW
+===================================================== */
+
+.dyn-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:8px;
+  align-items:center;
+}
+
+.dyn-row input[type=text]{
+  flex:1;
+}
+
+.dyn-remove{
+  background:none;
+  border:none;
+  color:var(--red);
+  cursor:pointer;
+  font-size:16px;
+  line-height:1;
+  padding:4px 8px;
+  flex-shrink:0;
+}
+
+.add-row-btn{
+  background:var(--teal-soft);
+  color:var(--teal);
+  border:1px dashed var(--teal);
+  border-radius:8px;
+  padding:7px 14px;
+  font-size:12.5px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:2px;
+}
+
+
+/* =====================================================
+BUTTON
+===================================================== */
+
+.actions-row{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:20px;
+  border-top:1px solid var(--line);
+  padding-top:16px;
+}
+
+.btn{
+  padding:10px 20px;
+  border-radius:9px;
+  border:none;
+  cursor:pointer;
+  font-weight:700;
+  font-size:13.5px;
+  font-family:'Inter',sans-serif;
+}
+
+.btn-primary{
+  background:var(--indigo);
+  color:#fff;
+}
+
+.btn-primary:hover{
+  background:#00552C;
+}
+
+.btn-ghost{
+  background:transparent;
+  color:var(--ink-soft);
+  border:1px solid var(--line);
+}
+
+.btn-ghost:hover{
+  background:var(--bg);
+}
+
+.btn-ghost:disabled{
+  opacity:.55;
+  cursor:default;
+}
+
+.btn-sm{
+  padding:7px 14px;
+  font-size:12.5px;
+}
+
+
+/* =====================================================
+REPORT LIST
+===================================================== */
+
+.filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:end;
+  margin-bottom:16px;
+}
+
+.filters .field{
+  min-width:150px;
+}
+
+.reports-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:16px;
+}
+
+.report-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+  position:relative;
+}
+
+.report-card.plan{
+  border-top:4px solid var(--teal);
+}
+
+.report-card.eod{
+  border-top:4px solid var(--indigo);
+}
+
+.rc-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:8px;
+}
+
+.rc-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  color:var(--ink);
+}
+
+.rc-sub{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-top:2px;
+}
+
+.rc-team{
+  font-size:10.5px;
+  font-weight:700;
+  padding:3px 9px;
+  border-radius:999px;
+  background:var(--indigo-soft);
+  color:var(--indigo);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+
+.rc-body{
+  font-size:13px;
+  line-height:1.55;
+}
+
+.rc-body b{
+  font-weight:700;
+}
+
+.rc-body .blk{
+  margin-bottom:10px;
+}
+
+.rc-body .blk-title{
+  font-weight:700;
+  font-size:12.5px;
+  color:var(--indigo);
+  margin-bottom:3px;
+}
+
+.rc-body ul{
+  margin:2px 0 0;
+  padding-left:18px;
+}
+
+.rc-body li{
+  margin-bottom:2px;
+}
+
+.kpi-line{
+  display:flex;
+  justify-content:space-between;
+  font-size:12.5px;
+  padding:2px 0;
+  border-bottom:1px dashed var(--line);
+}
+
+.rc-actions{
+  display:flex;
+  gap:12px;
+  margin-top:12px;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+}
+
+.rc-actions button{
+  background:none;
+  border:none;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  color:var(--ink-soft);
+}
+
+.rc-actions button:hover{
+  color:var(--indigo);
+}
+
+.rc-actions button.del:hover{
+  color:var(--red);
+}
+
+.empty-state{
+  padding:40px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:14px;
+  grid-column:1/-1;
+}
+
+
+/* =====================================================
+REFRESH
+===================================================== */
+
+.refresh-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.refresh-btn .spin{
+  display:inline-block;
+  transition:transform .5s;
+}
+
+.refresh-btn.loading .spin{
+  animation:spin .7s linear infinite;
+}
+
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
+.last-sync{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-top:6px;
+  text-align:right;
+}
+
+
+/* =====================================================
+MANAGER
+===================================================== */
+
+.manager-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.manager-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:var(--green-soft);
+  color:var(--green);
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12.5px;
+  font-weight:700;
+}
+
+.manager-pass-input{
+  width:150px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-size:13px;
+}
+
+
+/* =====================================================
+STATUS TABLE
+===================================================== */
+
+.status-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.status-table th{
+  text-align:left;
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  padding:8px 10px;
+  border-bottom:1px solid var(--line);
+  letter-spacing:.03em;
+}
+
+.status-table td{
+  padding:9px 10px;
+  font-size:13px;
+  border-bottom:1px solid var(--line);
+}
+
+.status-table tr:last-child td{
+  border-bottom:none;
+}
+
+.team-row td{
+  background:var(--bg);
+  font-weight:700;
+  color:var(--indigo);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:12px;
+  padding:7px 10px;
+}
+
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.status-yes{
+  background:var(--green-soft);
+  color:var(--green);
+}
+
+.status-no{
+  background:var(--red-soft);
+  color:var(--red);
+}
+
+
+/* =====================================================
+5 PIE CHART KPI
+===================================================== */
+
+.kpi-pie-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:14px;
+  margin-top:20px;
+}
+
+.kpi-pie-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  padding:16px 10px 13px;
+  text-align:center;
+}
+
+.kpi-pie-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  color:var(--indigo);
+}
+
+.kpi-pie-total{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-top:3px;
+  margin-bottom:8px;
+}
+
+.kpi-pie-canvas{
+  width:100%;
+  height:180px;
+  position:relative;
+}
+
+.pie-team-values{
+  margin-top:8px;
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  font-size:11px;
+}
+
+.pie-team-rmp{
+  color:#00733C;
+  font-weight:700;
+}
+
+.pie-team-ls{
+  color:#B4880B;
+  font-weight:700;
+}
+
+.pie-summary{
+  margin-top:16px;
+  padding:12px 14px;
+  background:var(--bg);
+  border-radius:10px;
+  color:var(--ink-soft);
+  font-size:12.5px;
+}
+
+@media(max-width:1000px){
+  .kpi-pie-grid{
+    grid-template-columns:repeat(3,1fr);
   }
-  .section-title .num{
-    width:22px;height:22px;border-radius:6px;background:var(--indigo-soft);color:var(--indigo);
-    display:flex;align-items:center;justify-content:center;font-size:12px;
+}
+
+@media(max-width:700px){
+  .kpi-pie-grid{
+    grid-template-columns:repeat(2,1fr);
   }
+}
 
-  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px;}
-  @media(max-width:760px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
-
-  .dyn-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
-  .dyn-row input[type=text]{flex:1;}
-  .dyn-remove{
-    background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;
-    padding:4px 8px;flex-shrink:0;
+@media(max-width:450px){
+  .kpi-pie-grid{
+    grid-template-columns:1fr;
   }
-  .add-row-btn{
-    background:var(--teal-soft);color:var(--teal);border:1px dashed var(--teal);
-    border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;margin-top:2px;
-  }
+}
 
-  .actions-row{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;border-top:1px solid var(--line);padding-top:16px;}
-  .btn{padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:13.5px;font-family:'Inter',sans-serif;}
-  .btn-primary{background:var(--indigo);color:#fff;}
-  .btn-primary:hover{background:#00552C;}
-  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
-  .btn-ghost:hover{background:var(--bg);}
-  .btn-ghost:disabled{opacity:.55;cursor:default;}
-  .btn-sm{padding:7px 14px;font-size:12.5px;}
-
-  /* report list */
-  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;}
-  .filters .field{min-width:150px;}
-  .reports-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
-  .report-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;position:relative;}
-  .report-card.plan{border-top:4px solid var(--teal);}
-  .report-card.eod{border-top:4px solid var(--indigo);}
-  .rc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
-  .rc-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);}
-  .rc-sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
-  .rc-team{
-    font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;
-    background:var(--indigo-soft);color:var(--indigo);text-transform:uppercase;letter-spacing:.03em;
-  }
-  .rc-body{font-size:13px;line-height:1.55;}
-  .rc-body b{font-weight:700;}
-  .rc-body .blk{margin-bottom:10px;}
-  .rc-body .blk-title{font-weight:700;font-size:12.5px;color:var(--indigo);margin-bottom:3px;}
-  .rc-body ul{margin:2px 0 0;padding-left:18px;}
-  .rc-body li{margin-bottom:2px;}
-  .kpi-line{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;border-bottom:1px dashed var(--line);}
-  .rc-actions{display:flex;gap:12px;margin-top:12px;border-top:1px solid var(--line);padding-top:10px;}
-  .rc-actions button{background:none;border:none;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink-soft);}
-  .rc-actions button:hover{color:var(--indigo);}
-  .rc-actions button.del:hover{color:var(--red);}
-  .empty-state{padding:40px;text-align:center;color:var(--ink-soft);font-size:14px;grid-column:1/-1;}
-
-  .refresh-btn{display:flex;align-items:center;gap:6px;}
-  .refresh-btn .spin{display:inline-block;transition:transform .5s;}
-  .refresh-btn.loading .spin{animation:spin .7s linear infinite;}
-  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-  .last-sync{font-size:11.5px;color:var(--ink-soft);margin-top:6px;text-align:right;}
-
-  /* manager inline gate */
-  .manager-box{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .manager-badge{
-    display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);
-    padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;
-  }
-  .manager-pass-input{width:150px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;}
-
-  /* status checklist */
-  .status-table{width:100%;border-collapse:collapse;}
-  .status-table th{
-    text-align:left;font-size:11px;text-transform:uppercase;color:var(--ink-soft);
-    padding:8px 10px;border-bottom:1px solid var(--line);letter-spacing:.03em;
-  }
-  .status-table td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--line);}
-  .status-table tr:last-child td{border-bottom:none;}
-  .team-row td{background:var(--bg);font-weight:700;color:var(--indigo);font-family:'Space Grotesk',sans-serif;font-size:12px;padding:7px 10px;}
-  .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;}
-  .status-yes{background:var(--green-soft);color:var(--green);}
-  .status-no{background:var(--red-soft);color:var(--red);}
-
-  /* pie chart */
-  .chart-wrap{display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
-  .chart-canvas-box{width:280px;height:280px;flex-shrink:0;position:relative;}
-  .chart-total-note{font-size:12.5px;color:var(--ink-soft);}
 </style>
 </head>
+
 <body>
+
 <div class="wrap">
 
-  <div class="topbar">
-    <div>
-      <p class="eyebrow">Team RMP &amp; LS</p>
-      <h1>Báo Cáo Workload Hàng Ngày</h1>
-      <p class="subtitle">Cập nhật kế hoạch đầu ngày và kết quả cuối ngày cho từng nhân sự</p>
-    </div>
-    <div class="today-pill" id="todayPill">—</div>
+<!-- =====================================================
+HEADER
+===================================================== -->
+
+<div class="topbar">
+
+  <div>
+    <p class="eyebrow">Team RMP &amp; LS</p>
+    <h1>Báo Cáo Workload Hàng Ngày</h1>
+    <p class="subtitle">
+      Cập nhật kế hoạch đầu ngày và kết quả cuối ngày cho từng nhân sự
+    </p>
   </div>
 
-  <div class="summary">
-    <div class="card"><div class="label">Đầu ngày hôm nay</div><div class="value" id="sumPlan">0/11</div></div>
-    <div class="card"><div class="label">Cuối ngày hôm nay</div><div class="value" id="sumEod">0/11</div></div>
-    <div class="card"><div class="label">Team RMP đã cập nhật</div><div class="value" id="sumRmp">0/5</div></div>
-    <div class="card"><div class="label">Team LS đã cập nhật</div><div class="value" id="sumLs">0/6</div></div>
+  <div class="today-pill" id="todayPill">—</div>
+
+</div>
+
+
+<!-- =====================================================
+SUMMARY CARDS
+===================================================== -->
+
+<div class="summary">
+
+  <div class="card">
+    <div class="label">Đầu ngày hôm nay</div>
+    <div class="value" id="sumPlan">0/11</div>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-type="plan">📊 Báo cáo đầu ngày</button>
-    <button class="tab-btn" data-type="eod">📝 Báo cáo cuối ngày</button>
+  <div class="card">
+    <div class="label">Cuối ngày hôm nay</div>
+    <div class="value" id="sumEod">0/11</div>
   </div>
 
-  <div class="panel">
-    <h2 id="formTitle">Tạo báo cáo đầu ngày</h2>
-    <p class="sec-hint" id="formHint">Chọn nhân sự và điền kế hoạch làm việc trong ngày</p>
-
-    <div class="top-fields">
-      <div class="field">
-        <label>Nhân viên</label>
-        <select id="fEmployee">
-          <optgroup label="Team RMP" id="grpRMP"></optgroup>
-          <optgroup label="Team LS" id="grpLS"></optgroup>
-        </select>
-      </div>
-      <div class="field"><label>Ngày</label><input type="date" id="fDate"></div>
-    </div>
-
-    <!-- PLAN FORM -->
-    <div id="planForm">
-      <div class="section-title"><span class="num">1</span> Mục tiêu hôm nay</div>
-      <div class="kpi-grid">
-        <div class="field"><label>TK HKD</label><input type="number" id="kpiTkHkd" min="0" placeholder="0"></div>
-        <div class="field"><label>CC</label><input type="number" id="kpiCc" min="0" placeholder="0"></div>
-        <div class="field"><label>TD</label><input type="number" id="kpiTd" min="0" placeholder="0"></div>
-        <div class="field"><label>UPL</label><input type="number" id="kpiUpl" min="0" placeholder="0"></div>
-        <div class="field"><label>PHÍ</label><input type="number" id="kpiPhi" min="0" placeholder="0"></div>
-      </div>
-      <div class="field"><label>Pipeline / Tên KH cụ thể (nếu có)</label><textarea id="kpiPipeline" rows="2" placeholder="VD: CC - Anh A, Cty XYZ..."></textarea></div>
-
-      <div class="section-title"><span class="num">2</span> Lịch làm việc cụ thể ngày</div>
-      <div id="scheduleRows"></div>
-    </div>
-
-    <!-- EOD FORM -->
-    <div id="eodForm" style="display:none;">
-      <div class="section-title"><span class="num">1</span> Kết quả so với kế hoạch</div>
-      <label style="font-size:12px;font-weight:700;color:var(--green);display:block;margin-bottom:6px;">✅ Đã đạt</label>
-      <div id="achievedRows"></div>
-      <button class="add-row-btn" id="addAchievedRow">+ Thêm mục đã đạt</button>
-
-      <label style="font-size:12px;font-weight:700;color:var(--red);display:block;margin:16px 0 6px;">❌ Chưa đạt</label>
-      <div id="notAchievedRows"></div>
-      <button class="add-row-btn" id="addNotAchievedRow">+ Thêm mục chưa đạt</button>
-
-      <div class="section-title"><span class="num">2</span> Nguyên nhân (đối với việc chưa đạt)</div>
-      <div id="reasonRows"></div>
-      <button class="add-row-btn" id="addReasonRow">+ Thêm nguyên nhân</button>
-
-      <div class="section-title"><span class="num">3</span> Giải pháp / Action tiếp theo</div>
-      <div id="actionRows"></div>
-      <button class="add-row-btn" id="addActionRow">+ Thêm action</button>
-    </div>
-
-    <div class="actions-row">
-      <button class="btn btn-ghost" id="resetBtn">Làm mới</button>
-      <button class="btn btn-primary" id="saveBtn">Lưu báo cáo</button>
-    </div>
+  <div class="card">
+    <div class="label">Team RMP đã cập nhật</div>
+    <div class="value" id="sumRmp">0/5</div>
   </div>
 
-  <!-- BÁO CÁO ĐÃ GHI NHẬN — ai cũng xem được, chỉ manager mới sửa/xóa được -->
-  <div class="panel">
-    <div class="panel-head-row">
-      <div>
-        <h2>Báo cáo đã ghi nhận</h2>
-        <p class="sec-hint" style="margin-bottom:0;">Mọi người xem được toàn bộ báo cáo. Chỉ manager đăng nhập mới sửa/xóa được.</p>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-        <div class="manager-box" id="managerBoxLocked">
-          <input type="password" class="manager-pass-input" id="managerPass" placeholder="Mã manager">
-          <button class="btn btn-primary btn-sm" id="managerUnlockBtn">Đăng nhập</button>
-        </div>
-        <div class="manager-box" id="managerBoxUnlocked" style="display:none;">
-          <span class="manager-badge">✓ Manager</span>
-          <button class="btn btn-ghost btn-sm" id="managerLockAgainBtn">Đăng xuất</button>
-        </div>
-        <button class="btn btn-ghost btn-sm refresh-btn" id="refreshBtn"><span class="spin">🔄</span> Cập nhật dữ liệu</button>
-        <div class="last-sync" id="lastSync"></div>
-      </div>
-    </div>
-    <div class="filters" style="margin-top:14px;">
-      <div class="field"><label>Ngày</label><input type="date" id="filterDate"></div>
-      <div class="field"><label>Team</label>
-        <select id="filterTeam"><option value="">Tất cả</option><option value="RMP">Team RMP</option><option value="LS">Team LS</option></select>
-      </div>
-      <div class="field"><label>Nhân viên</label><select id="filterEmployee"><option value="">Tất cả</option></select></div>
-      <div class="field"><label>Loại báo cáo</label>
-        <select id="filterType"><option value="">Tất cả</option><option value="plan">Đầu ngày</option><option value="eod">Cuối ngày</option></select>
-      </div>
-      <button class="btn btn-ghost" id="clearFilters">Xóa lọc</button>
-    </div>
-    <div class="reports-grid" id="reportsGrid"></div>
-  </div>
-
-  <!-- TRẠNG THÁI ĐÃ ĐIỀN / CHƯA ĐIỀN -->
-  <div class="panel">
-    <div class="panel-head-row">
-      <div>
-        <h2>Trạng thái cập nhật nhân viên</h2>
-        <p class="sec-hint" style="margin-bottom:0;">Ai đã điền báo cáo, ai chưa điền — theo ngày đã chọn</p>
-      </div>
-      <div class="field" style="width:170px;"><label>Ngày</label><input type="date" id="statusDate"></div>
-    </div>
-    <table class="status-table">
-      <thead><tr><th>Nhân viên</th><th>Đầu ngày</th><th>Cuối ngày</th></tr></thead>
-      <tbody id="statusTableBody"></tbody>
-    </table>
-  </div>
-
-  <!-- PIE CHART TỔNG HỢP MỤC TIÊU -->
-  <div class="panel">
-    <div class="panel-head-row">
-      <div>
-        <h2>Tổng hợp mục tiêu hôm nay</h2>
-        <p class="sec-hint" style="margin-bottom:0;">Tỉ trọng các chỉ tiêu (TK HKD, CC, TD, UPL, PHÍ) cộng dồn từ báo cáo đầu ngày</p>
-      </div>
-      <div class="field" style="width:170px;"><label>Ngày</label><input type="date" id="pieDate"></div>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-canvas-box"><canvas id="targetPieChart"></canvas></div>
-      <div>
-        <div class="chart-total-note" id="pieEmptyNote"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BÁO CÁO TỔNG HỢP DẠNG VĂN BẢN -->
-  <div class="panel">
-    <h2>Báo cáo tổng hợp cuối ngày</h2>
-    <p class="sec-hint">Gộp toàn bộ báo cáo đầu ngày &amp; cuối ngày của cả 2 team theo 1 ngày, để gửi hoặc lưu trữ</p>
-    <div class="top-fields" style="align-items:end;">
-      <div class="field"><label>Chọn ngày</label><input type="date" id="summaryDate"></div>
-      <div class="field" style="display:flex;gap:10px;align-self:end;">
-        <button class="btn btn-primary" id="genSummaryBtn">Tạo báo cáo tổng</button>
-      </div>
-    </div>
-    <textarea id="summaryOutput" rows="16" readonly placeholder="Bấm 'Tạo báo cáo tổng' để xem nội dung..." style="width:100%;font-family:'Inter',monospace;font-size:12.5px;line-height:1.6;margin-top:6px;white-space:pre-wrap;"></textarea>
-    <div class="actions-row" style="justify-content:flex-start;border-top:none;padding-top:10px;">
-      <button class="btn btn-ghost" id="copySummaryBtn">Sao chép</button>
-      <button class="btn btn-ghost" id="downloadSummaryBtn">Tải xuống .txt</button>
-    </div>
+  <div class="card">
+    <div class="label">Team LS đã cập nhật</div>
+    <div class="value" id="sumLs">0/6</div>
   </div>
 
 </div>
 
+
+<!-- =====================================================
+TABS
+===================================================== -->
+
+<div class="tabs">
+
+  <button class="tab-btn active" data-type="plan">
+    📊 Báo cáo đầu ngày
+  </button>
+
+  <button class="tab-btn" data-type="eod">
+    📝 Báo cáo cuối ngày
+  </button>
+
+</div>
+
+
+<!-- =====================================================
+FORM
+===================================================== -->
+
+<div class="panel">
+
+<h2 id="formTitle">Tạo báo cáo đầu ngày</h2>
+
+<p class="sec-hint" id="formHint">
+  Chọn nhân sự và điền kế hoạch làm việc trong ngày
+</p>
+
+
+<div class="top-fields">
+
+  <div class="field">
+    <label>Nhân viên</label>
+
+    <select id="fEmployee">
+
+      <optgroup label="Team RMP" id="grpRMP"></optgroup>
+
+      <optgroup label="Team LS" id="grpLS"></optgroup>
+
+    </select>
+
+  </div>
+
+
+  <div class="field">
+
+    <label>Ngày</label>
+
+    <input type="date" id="fDate">
+
+  </div>
+
+</div>
+
+
+<!-- PLAN FORM -->
+
+<div id="planForm">
+
+<div class="section-title">
+  <span class="num">1</span>
+  Mục tiêu hôm nay
+</div>
+
+
+<div class="kpi-grid">
+
+<div class="field">
+<label>TK HKD</label>
+<input type="number" id="kpiTkHkd" min="0" placeholder="0">
+</div>
+
+<div class="field">
+<label>CC</label>
+<input type="number" id="kpiCc" min="0" placeholder="0">
+</div>
+
+<div class="field">
+<label>TD</label>
+<input type="number" id="kpiTd" min="0" placeholder="0">
+</div>
+
+<div class="field">
+<label>UPL</label>
+<input type="number" id="kpiUpl" min="0" placeholder="0">
+</div>
+
+<div class="field">
+<label>PHÍ</label>
+<input type="number" id="kpiPhi" min="0" placeholder="0">
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label>
+Pipeline / Tên KH cụ thể (nếu có)
+</label>
+
+<textarea
+id="kpiPipeline"
+rows="2"
+placeholder="VD: CC - Anh A, Cty XYZ...">
+</textarea>
+
+</div>
+
+
+<div class="section-title">
+<span class="num">2</span>
+Lịch làm việc cụ thể ngày
+</div>
+
+<div id="scheduleRows"></div>
+
+</div>
+
+
+<!-- EOD FORM -->
+
+<div id="eodForm" style="display:none;">
+
+<div class="section-title">
+<span class="num">1</span>
+Kết quả so với kế hoạch
+</div>
+
+
+<label style="font-size:12px;font-weight:700;color:var(--green);display:block;margin-bottom:6px;">
+✅ Đã đạt
+</label>
+
+<div id="achievedRows"></div>
+
+<button
+class="add-row-btn"
+id="addAchievedRow">
++ Thêm mục đã đạt
+</button>
+
+
+<label style="font-size:12px;font-weight:700;color:var(--red);display:block;margin:16px 0 6px;">
+❌ Chưa đạt
+</label>
+
+<div id="notAchievedRows"></div>
+
+<button
+class="add-row-btn"
+id="addNotAchievedRow">
++ Thêm mục chưa đạt
+</button>
+
+
+<div class="section-title">
+<span class="num">2</span>
+Nguyên nhân (đối với việc chưa đạt)
+</div>
+
+<div id="reasonRows"></div>
+
+<button
+class="add-row-btn"
+id="addReasonRow">
++ Thêm nguyên nhân
+</button>
+
+
+<div class="section-title">
+<span class="num">3</span>
+Giải pháp / Action tiếp theo
+</div>
+
+<div id="actionRows"></div>
+
+<button
+class="add-row-btn"
+id="addActionRow">
++ Thêm action
+</button>
+
+</div>
+
+
+<div class="actions-row">
+
+<button
+class="btn btn-ghost"
+id="resetBtn">
+Làm mới
+</button>
+
+<button
+class="btn btn-primary"
+id="saveBtn">
+Lưu báo cáo
+</button>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+REPORT LIST
+===================================================== -->
+
+<div class="panel">
+
+<div class="panel-head-row">
+
+<div>
+
+<h2>Báo cáo đã ghi nhận</h2>
+
+<p
+class="sec-hint"
+style="margin-bottom:0;">
+Request Manager để chỉnh sửa / xoá báo cáo.
+</p>
+
+</div>
+
+
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+
+<div
+class="manager-box"
+id="managerBoxLocked">
+
+<input
+type="password"
+class="manager-pass-input"
+id="managerPass"
+placeholder="Mã manager">
+
+<button
+class="btn btn-primary btn-sm"
+id="managerUnlockBtn">
+Đăng nhập
+</button>
+
+</div>
+
+
+<div
+class="manager-box"
+id="managerBoxUnlocked"
+style="display:none;">
+
+<span class="manager-badge">
+✓ Manager
+</span>
+
+<button
+class="btn btn-ghost btn-sm"
+id="managerLockAgainBtn">
+Đăng xuất
+</button>
+
+</div>
+
+
+<button
+class="btn btn-ghost btn-sm refresh-btn"
+id="refreshBtn">
+
+<span class="spin">🔄</span>
+
+Cập nhật dữ liệu
+
+</button>
+
+<div
+class="last-sync"
+id="lastSync">
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="filters"
+style="margin-top:14px;">
+
+
+<div class="field">
+<label>Ngày</label>
+<input type="date" id="filterDate">
+</div>
+
+
+<div class="field">
+
+<label>Team</label>
+
+<select id="filterTeam">
+
+<option value="">
+Tất cả
+</option>
+
+<option value="RMP">
+Team RMP
+</option>
+
+<option value="LS">
+Team LS
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>Nhân viên</label>
+
+<select id="filterEmployee">
+
+<option value="">
+Tất cả
+</option>
+
+</select>
+
+</div>
+
+
+<div class="field">
+
+<label>Loại báo cáo</label>
+
+<select id="filterType">
+
+<option value="">
+Tất cả
+</option>
+
+<option value="plan">
+Đầu ngày
+</option>
+
+<option value="eod">
+Cuối ngày
+</option>
+
+</select>
+
+</div>
+
+
+<button
+class="btn btn-ghost"
+id="clearFilters">
+Xóa lọc
+</button>
+
+</div>
+
+
+<div
+class="reports-grid"
+id="reportsGrid">
+</div>
+
+</div>
+
+
+<!-- =====================================================
+STATUS
+===================================================== -->
+
+<div class="panel">
+
+<div class="panel-head-row">
+
+<div>
+
+<h2>
+Trạng thái cập nhật nhân viên
+</h2>
+
+<p
+class="sec-hint"
+style="margin-bottom:0;">
+Tracking nhân sự điền báo cáo - theo ngày đã chọn
+</p>
+
+</div>
+
+
+<div
+class="field"
+style="width:170px;">
+
+<label>
+Ngày
+</label>
+
+<input
+type="date"
+id="statusDate">
+
+</div>
+
+</div>
+
+
+<table class="status-table">
+
+<thead>
+
+<tr>
+
+<th>
+Nhân viên
+</th>
+
+<th>
+Đầu ngày
+</th>
+
+<th>
+Cuối ngày
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="statusTableBody"></tbody>
+
+</table>
+
+</div>
+
+
+<!-- =====================================================
+5 PIE CHARTS
+===================================================== -->
+
+<div class="panel">
+
+<div class="panel-head-row">
+
+<div>
+
+<h2>
+Tổng hợp mục tiêu hôm nay
+</h2>
+
+<p
+class="sec-hint"
+style="margin-bottom:0;">
+
+Tỉ trọng mục tiêu của Team RMP và Team LS theo từng chỉ tiêu,
+cộng dồn từ báo cáo đầu ngày
+
+</p>
+
+</div>
+
+
+<div
+class="field"
+style="width:170px;">
+
+<label>
+Ngày
+</label>
+
+<input
+type="date"
+id="pieDate">
+
+</div>
+
+</div>
+
+
+<div class="kpi-pie-grid">
+
+
+<!-- TK HKD -->
+
+<div class="kpi-pie-card">
+
+<div class="kpi-pie-title">
+TK HKD
+</div>
+
+<div
+class="kpi-pie-total"
+id="totalTkHkd">
+Tổng: 0
+</div>
+
+<div class="kpi-pie-canvas">
+
+<canvas id="pieTkHkd"></canvas>
+
+</div>
+
+<div class="pie-team-values">
+
+<span
+class="pie-team-rmp"
+id="tkHkdRmp">
+RMP: 0
+</span>
+
+<span
+class="pie-team-ls"
+id="tkHkdLs">
+LS: 0
+</span>
+
+</div>
+
+</div>
+
+
+<!-- CC -->
+
+<div class="kpi-pie-card">
+
+<div class="kpi-pie-title">
+CC
+</div>
+
+<div
+class="kpi-pie-total"
+id="totalCc">
+Tổng: 0
+</div>
+
+<div class="kpi-pie-canvas">
+
+<canvas id="pieCc"></canvas>
+
+</div>
+
+<div class="pie-team-values">
+
+<span
+class="pie-team-rmp"
+id="ccRmp">
+RMP: 0
+</span>
+
+<span
+class="pie-team-ls"
+id="ccLs">
+LS: 0
+</span>
+
+</div>
+
+</div>
+
+
+<!-- TD -->
+
+<div class="kpi-pie-card">
+
+<div class="kpi-pie-title">
+TD
+</div>
+
+<div
+class="kpi-pie-total"
+id="totalTd">
+Tổng: 0
+</div>
+
+<div class="kpi-pie-canvas">
+
+<canvas id="pieTd"></canvas>
+
+</div>
+
+<div class="pie-team-values">
+
+<span
+class="pie-team-rmp"
+id="tdRmp">
+RMP: 0
+</span>
+
+<span
+class="pie-team-ls"
+id="tdLs">
+LS: 0
+</span>
+
+</div>
+
+</div>
+
+
+<!-- UPL -->
+
+<div class="kpi-pie-card">
+
+<div class="kpi-pie-title">
+UPL
+</div>
+
+<div
+class="kpi-pie-total"
+id="totalUpl">
+Tổng: 0
+</div>
+
+<div class="kpi-pie-canvas">
+
+<canvas id="pieUpl"></canvas>
+
+</div>
+
+<div class="pie-team-values">
+
+<span
+class="pie-team-rmp"
+id="uplRmp">
+RMP: 0
+</span>
+
+<span
+class="pie-team-ls"
+id="uplLs">
+LS: 0
+</span>
+
+</div>
+
+</div>
+
+
+<!-- PHI -->
+
+<div class="kpi-pie-card">
+
+<div class="kpi-pie-title">
+PHÍ
+</div>
+
+<div
+class="kpi-pie-total"
+id="totalPhi">
+Tổng: 0
+</div>
+
+<div class="kpi-pie-canvas">
+
+<canvas id="piePhi"></canvas>
+
+</div>
+
+<div class="pie-team-values">
+
+<span
+class="pie-team-rmp"
+id="phiRmp">
+RMP: 0
+</span>
+
+<span
+class="pie-team-ls"
+id="phiLs">
+LS: 0
+</span>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+<div
+class="pie-summary"
+id="pieSummary">
+
+Chưa có dữ liệu.
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+SUMMARY TEXT
+===================================================== -->
+
+<div class="panel">
+
+<h2>
+Báo cáo tổng hợp cuối ngày
+</h2>
+
+<p class="sec-hint">
+
+Gộp toàn bộ báo cáo đầu ngày &amp; cuối ngày của cả 2 team theo 1 ngày,
+để gửi hoặc lưu trữ
+
+</p>
+
+
+<div
+class="top-fields"
+style="align-items:end;">
+
+<div class="field">
+
+<label>
+Chọn ngày
+</label>
+
+<input
+type="date"
+id="summaryDate">
+
+</div>
+
+
+<div
+class="field"
+style="display:flex;gap:10px;align-self:end;">
+
+<button
+class="btn btn-primary"
+id="genSummaryBtn">
+
+Tạo báo cáo tổng
+
+</button>
+
+</div>
+
+</div>
+
+
+<textarea
+id="summaryOutput"
+rows="16"
+readonly
+placeholder="Bấm 'Tạo báo cáo tổng' để xem nội dung..."
+style="
+width:100%;
+font-family:'Inter',monospace;
+font-size:12.5px;
+line-height:1.6;
+margin-top:6px;
+white-space:pre-wrap;
+">
+</textarea>
+
+
+<div
+class="actions-row"
+style="justify-content:flex-start;border-top:none;padding-top:10px;">
+
+<button
+class="btn btn-ghost"
+id="copySummaryBtn">
+Sao chép
+</button>
+
+<button
+class="btn btn-ghost"
+id="downloadSummaryBtn">
+Tải xuống .txt
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
 <script>
+
+/* =====================================================
+EMPLOYEES
+===================================================== */
+
 const EMPLOYEES = [
-  {name:'Bùi Thái Sơn', team:'RMP'},
-  {name:'Đào Thị Lệ Uyên', team:'RMP'},
-  {name:'Hồ Mộng Cầm', team:'RMP'},
-  {name:'Huỳnh Kim Thoa', team:'RMP'},
-  {name:'Nguyễn Thị Minh', team:'RMP'},
-  {name:'Đặng Thế Văn', team:'LS'},
-  {name:'Đoàn Hồng Thủy', team:'LS'},
-  {name:'Lê Quang Chính', team:'LS'},
-  {name:'Nguyễn Ngọc Duy', team:'LS'},
-  {name:'Nguyễn Thái Nhật Duy', team:'LS'},
-  {name:'Phạm Thị Nguyệt Hằng', team:'LS'},
+
+{name:'Bùi Thái Sơn', team:'RMP'},
+{name:'Đào Thị Lệ Uyên', team:'RMP'},
+{name:'Hồ Mộng Cầm', team:'RMP'},
+{name:'Huỳnh Kim Thoa', team:'RMP'},
+{name:'Nguyễn Thị Minh', team:'RMP'},
+
+{name:'Đặng Thế Văn', team:'LS'},
+{name:'Đoàn Hồng Thủy', team:'LS'},
+{name:'Lê Quang Chính', team:'LS'},
+{name:'Nguyễn Ngọc Duy', team:'LS'},
+{name:'Nguyễn Thái Nhật Duy', team:'LS'},
+{name:'Phạm Thị Nguyệt Hằng', team:'LS'}
+
 ];
-const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwvOxjEaULess0UzX-fR_mjx3fAZkh480bhwGjJKYdWeqBVCh0BQTFBocfg1xrfMhy_sA/exec';
-const MANAGER_PASSCODE = 'VPB2026';
-const PIE_COLORS = ['#00733C', '#00A651', '#B4880B', '#A6192E', '#5B7166'];
+
+
+/* =====================================================
+CONFIG
+===================================================== */
+
+const SHEET_API_URL =
+'https://script.google.com/macros/s/AKfycbwvOxjEaULess0UzX-fR_mjx3fAZkh480bhwGjJKYdWeqBVCh0BQTFBocfg1xrfMhy_sA/exec';
+
+const MANAGER_PASSCODE =
+'VPB2026';
+
+
+/* =====================================================
+GLOBAL
+===================================================== */
 
 let reports = [];
+
 let currentType = 'plan';
+
 let editingId = null;
+
 let isManagerUnlocked = false;
-let pieChartInstance = null;
+
+
+/* 5 chart instances */
+
+let pieChartInstances = {};
+
+
+/* =====================================================
+DRAFT
+===================================================== */
 
 let draft = {
-  schedule: [
-    {label:'8H - 9H',task:''},
-    {label:'9H - 10H',task:''},
-    {label:'10H - 12H',task:''},
-    {label:'13H30 - 14H30',task:''},
-    {label:'14H30 - 16H',task:''},
-    {label:'16H - 17H30',task:''}
-  ],
-  achieved: [''],
-  notAchieved: [''],
-  reasons: [''],
-  actions: ['']
+
+schedule:[
+
+{label:'8H - 9H',task:''},
+{label:'9H - 10H',task:''},
+{label:'10H - 12H',task:''},
+{label:'13H30 - 14H30',task:''},
+{label:'14H30 - 16H',task:''},
+{label:'16H - 17H30',task:''}
+
+],
+
+achieved:[''],
+
+notAchieved:[''],
+
+reasons:[''],
+
+actions:['']
+
 };
 
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function fmtDateLabel(iso){ const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
-function fmtTimeLabel(d){ return d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}); }
-function shortName(full){ const parts = full.trim().split(' '); return parts[parts.length-1]; }
-function teamOf(name){ const e = EMPLOYEES.find(e=>e.name===name); return e ? e.team : ''; }
-function uid(){ return 'r'+Date.now()+Math.random().toString(16).slice(2,8); }
-function escapeHtml(str){ return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+
+/* =====================================================
+UTILITY
+===================================================== */
+
+function todayStr(){
+
+return new Date()
+.toISOString()
+.slice(0,10);
+
+}
+
+
+function fmtDateLabel(iso){
+
+if(!iso) return '';
+
+const [y,m,d] =
+iso.split('-');
+
+return `${d}/${m}/${y}`;
+
+}
+
+
+function fmtTimeLabel(d){
+
+return d.toLocaleTimeString(
+'vi-VN',
+{
+hour:'2-digit',
+minute:'2-digit'
+}
+);
+
+}
+
+
+function shortName(full){
+
+const parts =
+full.trim().split(' ');
+
+return parts[
+parts.length - 1
+];
+
+}
+
+
+function teamOf(name){
+
+const e =
+EMPLOYEES.find(
+e => e.name === name
+);
+
+return e
+? e.team
+: '';
+
+}
+
+
+function uid(){
+
+return (
+'r'
++ Date.now()
++ Math.random()
+.toString(16)
+.slice(2,8)
+);
+
+}
+
+
+function escapeHtml(str){
+
+return String(str)
+.replace(
+/[&<>"']/g,
+s => ({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;',
+"'":'&#39;'
+}[s])
+);
+
+}
+
+
+function formatKpiNumber(value){
+
+const num =
+Number(value) || 0;
+
+return new Intl.NumberFormat(
+'vi-VN',
+{
+maximumFractionDigits:2
+}
+).format(num);
+
+}
+
+
+/* =====================================================
+EMPLOYEE SELECT
+===================================================== */
 
 function initEmployeeSelects(){
-  const grpRMP = document.getElementById('grpRMP');
-  const grpLS = document.getElementById('grpLS');
-  EMPLOYEES.forEach(e=>{
-    const opt = `<option value="${escapeHtml(e.name)}">${escapeHtml(e.name)}</option>`;
-    if(e.team==='RMP') grpRMP.insertAdjacentHTML('beforeend', opt);
-    else grpLS.insertAdjacentHTML('beforeend', opt);
-  });
-  const filterEmp = document.getElementById('filterEmployee');
-  EMPLOYEES.forEach(e=>{
-    filterEmp.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(e.name)}">${escapeHtml(e.name)}</option>`);
-  });
+
+const grpRMP =
+document.getElementById('grpRMP');
+
+const grpLS =
+document.getElementById('grpLS');
+
+
+EMPLOYEES.forEach(e => {
+
+const opt =
+`<option value="${escapeHtml(e.name)}">
+${escapeHtml(e.name)}
+</option>`;
+
+if(e.team === 'RMP'){
+
+grpRMP.insertAdjacentHTML(
+'beforeend',
+opt
+);
+
+}else{
+
+grpLS.insertAdjacentHTML(
+'beforeend',
+opt
+);
+
 }
 
-/* ---------- dynamic row rendering ---------- */
+});
+
+
+const filterEmp =
+document.getElementById(
+'filterEmployee'
+);
+
+
+EMPLOYEES.forEach(e => {
+
+filterEmp.insertAdjacentHTML(
+
+'beforeend',
+
+`<option value="${escapeHtml(e.name)}">
+${escapeHtml(e.name)}
+</option>`
+
+);
+
+});
+
+}
+
+
+/* =====================================================
+SCHEDULE ROWS
+===================================================== */
+
 function renderScheduleRows(){
-  const el = document.getElementById('scheduleRows');
-  el.innerHTML = draft.schedule.map((row,i)=>`
-    <div class="dyn-row">
-      <div style="width:150px;flex-shrink:0;font-size:13px;font-weight:700;color:var(--indigo);">${escapeHtml(row.label)}</div>
-      <input type="text" data-kind="schedule" data-field="task" data-i="${i}" placeholder="Nội dung công việc" value="${escapeHtml(row.task)}">
-    </div>`).join('');
+
+const el =
+document.getElementById(
+'scheduleRows'
+);
+
+
+el.innerHTML =
+draft.schedule
+.map((row,i)=>`
+
+<div class="dyn-row">
+
+<div style="
+width:150px;
+flex-shrink:0;
+font-size:13px;
+font-weight:700;
+color:var(--indigo);
+">
+
+${escapeHtml(row.label)}
+
+</div>
+
+
+<input
+type="text"
+data-kind="schedule"
+data-field="task"
+data-i="${i}"
+placeholder="Nội dung công việc"
+value="${escapeHtml(row.task)}">
+
+</div>
+
+`)
+.join('');
+
 }
-function renderBulletRows(containerId, arrKey, placeholder){
-  const el = document.getElementById(containerId);
-  el.innerHTML = draft[arrKey].map((val,i)=>`
-    <div class="dyn-row">
-      <input type="text" data-kind="${arrKey}" data-i="${i}" placeholder="${placeholder}" value="${escapeHtml(val)}">
-      <button class="dyn-remove" data-kind="${arrKey}" data-i="${i}" title="Xóa">✕</button>
-    </div>`).join('');
+
+
+/* =====================================================
+BULLET ROWS
+===================================================== */
+
+function renderBulletRows(
+containerId,
+arrKey,
+placeholder
+){
+
+const el =
+document.getElementById(
+containerId
+);
+
+
+el.innerHTML =
+draft[arrKey]
+.map((val,i)=>`
+
+<div class="dyn-row">
+
+<input
+type="text"
+data-kind="${arrKey}"
+data-i="${i}"
+placeholder="${placeholder}"
+value="${escapeHtml(val)}">
+
+
+<button
+class="dyn-remove"
+data-kind="${arrKey}"
+data-i="${i}"
+title="Xóa">
+
+✕
+
+</button>
+
+</div>
+
+`)
+.join('');
+
 }
+
+
+/* =====================================================
+RENDER ALL DYNAMIC
+===================================================== */
+
 function renderAllDynamic(){
-  renderScheduleRows();
-  renderBulletRows('achievedRows','achieved','VD: 1 CC active');
-  renderBulletRows('notAchievedRows','notAchieved','VD: Chưa đạt HKD');
-  renderBulletRows('reasonRows','reasons','VD: CNKD hẹn lại');
-  renderBulletRows('actionRows','actions','VD: Tìm nguồn CTV, MGM khách mới');
+
+renderScheduleRows();
+
+renderBulletRows(
+'achievedRows',
+'achieved',
+'VD: 1 CC active'
+);
+
+renderBulletRows(
+'notAchievedRows',
+'notAchieved',
+'VD: Chưa đạt HKD'
+);
+
+renderBulletRows(
+'reasonRows',
+'reasons',
+'VD: CNKD hẹn lại'
+);
+
+renderBulletRows(
+'actionRows',
+'actions',
+'VD: Tìm nguồn CTV, MGM khách mới'
+);
+
 }
 
-document.addEventListener('input', (e)=>{
-  const t = e.target;
-  if(!t.dataset || !t.dataset.kind) return;
-  const kind = t.dataset.kind;
-  if(kind==='schedule'){
-    const i = Number(t.dataset.i);
-    draft.schedule[i][t.dataset.field] = t.value;
-  } else if(['achieved','notAchieved','reasons','actions'].includes(kind)){
-    const i = Number(t.dataset.i);
-    draft[kind][i] = t.value;
-  }
-});
-document.addEventListener('click', (e)=>{
-  const t = e.target;
-  if(t.classList && t.classList.contains('dyn-remove')){
-    const kind = t.dataset.kind;
-    const i = Number(t.dataset.i);
-    if(kind!=='schedule'){
-      draft[kind].splice(i,1);
-      if(draft[kind].length===0) draft[kind].push('');
-      const map = {achieved:['achievedRows','VD: 1 CC active'], notAchieved:['notAchievedRows','VD: Chưa đạt HKD'], reasons:['reasonRows','VD: CNKD hẹn lại'], actions:['actionRows','VD: Tìm nguồn CTV, MGM khách mới']};
-      renderBulletRows(map[kind][0], kind, map[kind][1]);
-    }
-  }
+
+/* =====================================================
+INPUT EVENT
+===================================================== */
+
+document.addEventListener(
+'input',
+e => {
+
+const t = e.target;
+
+if(
+!t.dataset ||
+!t.dataset.kind
+) return;
+
+
+const kind =
+t.dataset.kind;
+
+
+if(kind === 'schedule'){
+
+const i =
+Number(
+t.dataset.i
+);
+
+draft.schedule[i][
+t.dataset.field
+] = t.value;
+
+}
+
+
+else if(
+[
+'achieved',
+'notAchieved',
+'reasons',
+'actions'
+]
+.includes(kind)
+){
+
+const i =
+Number(
+t.dataset.i
+);
+
+draft[kind][i] =
+t.value;
+
+}
+
 });
 
-document.getElementById('addAchievedRow').addEventListener('click', ()=>{ draft.achieved.push(''); renderBulletRows('achievedRows','achieved','VD: 1 CC active'); });
-document.getElementById('addNotAchievedRow').addEventListener('click', ()=>{ draft.notAchieved.push(''); renderBulletRows('notAchievedRows','notAchieved','VD: Chưa đạt HKD'); });
-document.getElementById('addReasonRow').addEventListener('click', ()=>{ draft.reasons.push(''); renderBulletRows('reasonRows','reasons','VD: CNKD hẹn lại'); });
-document.getElementById('addActionRow').addEventListener('click', ()=>{ draft.actions.push(''); renderBulletRows('actionRows','actions','VD: Tìm nguồn CTV, MGM khách mới'); });
 
-/* ---------- tabs ---------- */
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentType = btn.dataset.type;
-    editingId = null;
-    resetDraft();
-    if(currentType==='plan'){
-      document.getElementById('planForm').style.display = '';
-      document.getElementById('eodForm').style.display = 'none';
-      document.getElementById('formTitle').textContent = 'Tạo báo cáo đầu ngày';
-      document.getElementById('formHint').textContent = 'Chọn nhân sự và điền kế hoạch làm việc trong ngày';
-    } else {
-      document.getElementById('planForm').style.display = 'none';
-      document.getElementById('eodForm').style.display = '';
-      document.getElementById('formTitle').textContent = 'Tạo báo cáo cuối ngày';
-      document.getElementById('formHint').textContent = 'Đối chiếu kết quả, nguyên nhân và action tiếp theo';
-    }
-  });
+/* =====================================================
+REMOVE ROW
+===================================================== */
+
+document.addEventListener(
+'click',
+e => {
+
+const t =
+e.target;
+
+
+if(
+t.classList &&
+t.classList.contains(
+'dyn-remove'
+)
+){
+
+const kind =
+t.dataset.kind;
+
+const i =
+Number(
+t.dataset.i
+);
+
+
+draft[kind].splice(
+i,
+1
+);
+
+
+if(
+draft[kind].length === 0
+){
+
+draft[kind].push('');
+
+}
+
+
+const map = {
+
+achieved:[
+'achievedRows',
+'VD: 1 CC active'
+],
+
+notAchieved:[
+'notAchievedRows',
+'VD: Chưa đạt HKD'
+],
+
+reasons:[
+'reasonRows',
+'VD: CNKD hẹn lại'
+],
+
+actions:[
+'actionRows',
+'VD: Tìm nguồn CTV, MGM khách mới'
+]
+
+};
+
+
+renderBulletRows(
+map[kind][0],
+kind,
+map[kind][1]
+);
+
+}
+
 });
+
+
+/* =====================================================
+ADD ROW BUTTON
+===================================================== */
+
+document
+.getElementById('addAchievedRow')
+.addEventListener(
+'click',
+()=>{
+
+draft.achieved.push('');
+
+renderBulletRows(
+'achievedRows',
+'achieved',
+'VD: 1 CC active'
+);
+
+});
+
+
+document
+.getElementById('addNotAchievedRow')
+.addEventListener(
+'click',
+()=>{
+
+draft.notAchieved.push('');
+
+renderBulletRows(
+'notAchievedRows',
+'notAchieved',
+'VD: Chưa đạt HKD'
+);
+
+});
+
+
+document
+.getElementById('addReasonRow')
+.addEventListener(
+'click',
+()=>{
+
+draft.reasons.push('');
+
+renderBulletRows(
+'reasonRows',
+'reasons',
+'VD: CNKD hẹn lại'
+);
+
+});
+
+
+document
+.getElementById('addActionRow')
+.addEventListener(
+'click',
+()=>{
+
+draft.actions.push('');
+
+renderBulletRows(
+'actionRows',
+'actions',
+'VD: Tìm nguồn CTV, MGM khách mới'
+);
+
+});
+
+
+/* =====================================================
+TABS
+===================================================== */
+
+document
+.querySelectorAll('.tab-btn')
+.forEach(btn => {
+
+btn.addEventListener(
+'click',
+()=>{
+
+document
+.querySelectorAll('.tab-btn')
+.forEach(
+b =>
+b.classList.remove(
+'active'
+)
+);
+
+
+btn.classList.add(
+'active'
+);
+
+
+currentType =
+btn.dataset.type;
+
+
+editingId =
+null;
+
+
+resetDraft();
+
+
+if(
+currentType === 'plan'
+){
+
+document
+.getElementById(
+'planForm'
+)
+.style.display = '';
+
+
+document
+.getElementById(
+'eodForm'
+)
+.style.display = 'none';
+
+
+document
+.getElementById(
+'formTitle'
+)
+.textContent =
+'Tạo báo cáo đầu ngày';
+
+
+document
+.getElementById(
+'formHint'
+)
+.textContent =
+'Chọn nhân sự và điền kế hoạch làm việc trong ngày';
+
+}
+
+else{
+
+document
+.getElementById(
+'planForm'
+)
+.style.display = 'none';
+
+
+document
+.getElementById(
+'eodForm'
+)
+.style.display = '';
+
+
+document
+.getElementById(
+'formTitle'
+)
+.textContent =
+'Tạo báo cáo cuối ngày';
+
+
+document
+.getElementById(
+'formHint'
+)
+.textContent =
+'Đối chiếu kết quả, nguyên nhân và action tiếp theo';
+
+}
+
+});
+
+});
+
+
+/* =====================================================
+RESET
+===================================================== */
 
 function resetDraft(){
-  draft = { schedule:[{label:'8H - 9H',task:''},{label:'9H - 10H',task:''},{label:'10H - 12H',task:''},{label:'13H30 - 14H30',task:''},{label:'14H30 - 16H',task:''},{label:'16H - 17H30',task:''}], achieved:[''], notAchieved:[''], reasons:[''], actions:[''] };
-  document.getElementById('kpiTkHkd').value='';
-  document.getElementById('kpiCc').value='';
-  document.getElementById('kpiTd').value='';
-  document.getElementById('kpiUpl').value='';
-  document.getElementById('kpiPhi').value='';
-  document.getElementById('kpiPipeline').value='';
-  renderAllDynamic();
+
+draft = {
+
+schedule:[
+
+{label:'8H - 9H',task:''},
+{label:'9H - 10H',task:''},
+{label:'10H - 12H',task:''},
+{label:'13H30 - 14H30',task:''},
+{label:'14H30 - 16H',task:''},
+{label:'16H - 17H30',task:''}
+
+],
+
+achieved:[''],
+
+notAchieved:[''],
+
+reasons:[''],
+
+actions:['']
+
+};
+
+
+document
+.getElementById(
+'kpiTkHkd'
+).value = '';
+
+
+document
+.getElementById(
+'kpiCc'
+).value = '';
+
+
+document
+.getElementById(
+'kpiTd'
+).value = '';
+
+
+document
+.getElementById(
+'kpiUpl'
+).value = '';
+
+
+document
+.getElementById(
+'kpiPhi'
+).value = '';
+
+
+document
+.getElementById(
+'kpiPipeline'
+).value = '';
+
+
+renderAllDynamic();
+
 }
-document.getElementById('resetBtn').addEventListener('click', ()=>{ editingId=null; resetDraft(); });
 
-/* ---------- storage (Google Sheets backend, no Claude login needed) ---------- */
-async function loadReports(){
-  try{
-    const res = await fetch(SHEET_API_URL, {method:'GET'});
-    const data = await res.json();
-    reports = Array.isArray(data) ? data : [];
-  }catch(e){
-    console.error('Load error', e);
-    reports = [];
-  }
-  renderAll();
-}
-async function saveReports(){
-  try{
-    // plain-text body avoids a CORS preflight against Apps Script
-    await fetch(SHEET_API_URL, {
-      method:'POST',
-      body: JSON.stringify(reports)
-    });
-  }catch(e){
-    console.error('Save error', e);
-    alert('Không lưu được lên Google Sheet. Kiểm tra kết nối mạng và thử lại.');
-  }
-}
 
-/* ---------- save ---------- */
-document.getElementById('saveBtn').addEventListener('click', async ()=>{
-  const employee = document.getElementById('fEmployee').value;
-  const date = document.getElementById('fDate').value || todayStr();
-  if(!employee){ alert('Vui lòng chọn nhân viên.'); return; }
+document
+.getElementById('resetBtn')
+.addEventListener(
+'click',
+()=>{
 
-  let record;
-  if(currentType==='plan'){
-    const schedule = draft.schedule.map(r=>({label:r.label, task:r.task.trim()})).filter(r=>r.task);
-    record = {
-      id: editingId || uid(), type:'plan', employee, team: teamOf(employee), date,
-      targets:{
-        tkHkd: document.getElementById('kpiTkHkd').value,
-        cc: document.getElementById('kpiCc').value,
-        td: document.getElementById('kpiTd').value,
-        upl: document.getElementById('kpiUpl').value,
-        phi: document.getElementById('kpiPhi').value,
-      },
-      pipeline: document.getElementById('kpiPipeline').value.trim(),
-      schedule
-    };
-  } else {
-    record = {
-      id: editingId || uid(), type:'eod', employee, team: teamOf(employee), date,
-      achieved: draft.achieved.filter(s=>s.trim()),
-      notAchieved: draft.notAchieved.filter(s=>s.trim()),
-      reasons: draft.reasons.filter(s=>s.trim()),
-      actions: draft.actions.filter(s=>s.trim())
-    };
-  }
+editingId = null;
 
-  if(editingId){
-    reports = reports.map(r=>r.id===editingId ? record : r);
-  } else {
-    // replace existing report of same employee+date+type if present (one report per type per day)
-    reports = reports.filter(r=>!(r.employee===employee && r.date===date && r.type===currentType));
-    reports.push(record);
-  }
-  editingId = null;
-  await saveReports();
-  resetDraft();
-  renderAll();
+resetDraft();
+
 });
 
-/* ---------- render summary + list ---------- */
+
+/* =====================================================
+LOAD REPORTS
+===================================================== */
+
+async function loadReports(){
+
+try{
+
+const res =
+await fetch(
+SHEET_API_URL,
+{
+method:'GET'
+}
+);
+
+
+const data =
+await res.json();
+
+
+reports =
+Array.isArray(data)
+? data
+: [];
+
+
+}catch(e){
+
+console.error(
+'Load error',
+e
+);
+
+reports = [];
+
+}
+
+
+renderAll();
+
+}
+
+
+/* =====================================================
+SAVE REPORTS
+===================================================== */
+
+async function saveReports(){
+
+try{
+
+await fetch(
+SHEET_API_URL,
+{
+
+method:'POST',
+
+body:
+JSON.stringify(
+reports
+)
+
+}
+);
+
+
+}catch(e){
+
+console.error(
+'Save error',
+e
+);
+
+
+alert(
+'Không lưu được lên Google Sheet. Kiểm tra kết nối mạng và thử lại.'
+);
+
+}
+
+}
+
+
+/* =====================================================
+SAVE BUTTON
+===================================================== */
+
+document
+.getElementById('saveBtn')
+.addEventListener(
+'click',
+async ()=>{
+
+const employee =
+document
+.getElementById(
+'fEmployee'
+).value;
+
+
+const date =
+document
+.getElementById(
+'fDate'
+).value
+||
+todayStr();
+
+
+if(!employee){
+
+alert(
+'Vui lòng chọn nhân viên.'
+);
+
+return;
+
+}
+
+
+let record;
+
+
+if(
+currentType === 'plan'
+){
+
+const schedule =
+draft.schedule
+
+.map(
+r => ({
+label:r.label,
+task:r.task.trim()
+})
+)
+
+.filter(
+r => r.task
+);
+
+
+record = {
+
+id:
+editingId
+||
+uid(),
+
+type:'plan',
+
+employee,
+
+team:
+teamOf(employee),
+
+date,
+
+targets:{
+
+tkHkd:
+document
+.getElementById(
+'kpiTkHkd'
+).value,
+
+cc:
+document
+.getElementById(
+'kpiCc'
+).value,
+
+td:
+document
+.getElementById(
+'kpiTd'
+).value,
+
+upl:
+document
+.getElementById(
+'kpiUpl'
+).value,
+
+phi:
+document
+.getElementById(
+'kpiPhi'
+).value
+
+},
+
+pipeline:
+document
+.getElementById(
+'kpiPipeline'
+).value.trim(),
+
+schedule
+
+};
+
+}
+
+else{
+
+record = {
+
+id:
+editingId
+||
+uid(),
+
+type:'eod',
+
+employee,
+
+team:
+teamOf(employee),
+
+date,
+
+achieved:
+draft.achieved
+.filter(
+s => s.trim()
+),
+
+notAchieved:
+draft.notAchieved
+.filter(
+s => s.trim()
+),
+
+reasons:
+draft.reasons
+.filter(
+s => s.trim()
+),
+
+actions:
+draft.actions
+.filter(
+s => s.trim()
+)
+
+};
+
+}
+
+
+if(editingId){
+
+reports =
+reports.map(
+r =>
+r.id === editingId
+? record
+: r
+);
+
+}
+
+else{
+
+reports =
+reports.filter(
+r =>
+!(
+r.employee === employee &&
+r.date === date &&
+r.type === currentType
+)
+);
+
+
+reports.push(
+record
+);
+
+}
+
+
+editingId =
+null;
+
+
+await saveReports();
+
+
+resetDraft();
+
+
+renderAll();
+
+});
+
+
+/* =====================================================
+RENDER ALL
+===================================================== */
+
 function renderAll(){
-  document.getElementById('todayPill').textContent = 'Hôm nay: ' + fmtDateLabel(todayStr());
-  renderSummary();
-  renderReportsList();
-  renderStatusTable();
-  renderPieChart();
+
+document
+.getElementById(
+'todayPill'
+)
+.textContent =
+'Hôm nay: '
++
+fmtDateLabel(
+todayStr()
+);
+
+
+renderSummary();
+
+renderReportsList();
+
+renderStatusTable();
+
+renderPieChart();
+
 }
+
+
+/* =====================================================
+SUMMARY
+===================================================== */
+
 function renderSummary(){
-  const today = todayStr();
-  const todays = reports.filter(r=>r.date===today);
-  const planCount = new Set(todays.filter(r=>r.type==='plan').map(r=>r.employee)).size;
-  const eodCount = new Set(todays.filter(r=>r.type==='eod').map(r=>r.employee)).size;
-  const rmpDone = new Set(todays.filter(r=>r.team==='RMP').map(r=>r.employee)).size;
-  const lsDone = new Set(todays.filter(r=>r.team==='LS').map(r=>r.employee)).size;
-  document.getElementById('sumPlan').textContent = `${planCount}/11`;
-  document.getElementById('sumEod').textContent = `${eodCount}/11`;
-  document.getElementById('sumRmp').textContent = `${rmpDone}/5`;
-  document.getElementById('sumLs').textContent = `${lsDone}/6`;
+
+const today =
+todayStr();
+
+
+const todays =
+reports.filter(
+r =>
+r.date === today
+);
+
+
+const planCount =
+new Set(
+
+todays
+.filter(
+r =>
+r.type === 'plan'
+)
+.map(
+r => r.employee
+)
+
+).size;
+
+
+const eodCount =
+new Set(
+
+todays
+.filter(
+r =>
+r.type === 'eod'
+)
+.map(
+r => r.employee
+)
+
+).size;
+
+
+const rmpDone =
+new Set(
+
+todays
+.filter(
+r =>
+r.team === 'RMP'
+)
+.map(
+r => r.employee
+)
+
+).size;
+
+
+const lsDone =
+new Set(
+
+todays
+.filter(
+r =>
+r.team === 'LS'
+)
+.map(
+r => r.employee
+)
+
+).size;
+
+
+document
+.getElementById(
+'sumPlan'
+)
+.textContent =
+`${planCount}/11`;
+
+
+document
+.getElementById(
+'sumEod'
+)
+.textContent =
+`${eodCount}/11`;
+
+
+document
+.getElementById(
+'sumRmp'
+)
+.textContent =
+`${rmpDone}/5`;
+
+
+document
+.getElementById(
+'sumLs'
+)
+.textContent =
+`${lsDone}/6`;
+
 }
+
+
+/* =====================================================
+REPORT LIST
+===================================================== */
 
 function renderReportsList(){
-  const grid = document.getElementById('reportsGrid');
-  const fDate = document.getElementById('filterDate').value;
-  const fTeam = document.getElementById('filterTeam').value;
-  const fEmp = document.getElementById('filterEmployee').value;
-  const fType = document.getElementById('filterType').value;
 
-  let list = reports.filter(r=>{
-    if(fDate && r.date!==fDate) return false;
-    if(fTeam && r.team!==fTeam) return false;
-    if(fEmp && r.employee!==fEmp) return false;
-    if(fType && r.type!==fType) return false;
-    return true;
-  });
-  list.sort((a,b)=> b.date.localeCompare(a.date) || a.employee.localeCompare(b.employee));
+const grid =
+document
+.getElementById(
+'reportsGrid'
+);
 
-  if(list.length===0){
-    grid.innerHTML = `<div class="empty-state">Chưa có báo cáo phù hợp bộ lọc.</div>`;
-    return;
-  }
 
-  grid.innerHTML = list.map(r=>{
-    const actionsHtml = isManagerUnlocked
-      ? `<div class="rc-actions"><button class="edit" data-id="${r.id}">Sửa</button><button class="del" data-id="${r.id}">Xóa</button></div>`
-      : '';
-    if(r.type==='plan'){
-      const t = r.targets||{};
-      const scheduleHtml = (r.schedule||[]).map(s=>`<li><b>${escapeHtml(s.label||'')}</b>: ${escapeHtml(s.task||'')}</li>`).join('');
-      return `<div class="report-card plan">
-        <div class="rc-head">
-          <div><div class="rc-title">📊 DAILY PLAN ngày ${fmtDateLabel(r.date)} - ${escapeHtml(shortName(r.employee))}</div>
-          <div class="rc-sub">${escapeHtml(r.employee)}</div></div>
-          <span class="rc-team">${r.team}</span>
-        </div>
-        <div class="rc-body">
-          <div class="blk">
-            <div class="blk-title">1️⃣ Mục tiêu hôm nay</div>
-            <div class="kpi-line"><span>TK HKD</span><b>${escapeHtml(t.tkHkd||t.tkCnkd||'0')}</b></div>
-            <div class="kpi-line"><span>CC</span><b>${escapeHtml(t.cc||'0')}</b></div>
-            <div class="kpi-line"><span>TD</span><b>${escapeHtml(t.td||'0')}</b></div>
-            <div class="kpi-line"><span>UPL</span><b>${escapeHtml(t.upl||'0')}</b></div>
-            <div class="kpi-line"><span>PHÍ</span><b>${escapeHtml(t.phi||'0')}</b></div>
-            ${r.pipeline ? `<div style="margin-top:6px;font-size:12px;color:var(--ink-soft);">Pipeline: ${escapeHtml(r.pipeline)}</div>` : ''}
-          </div>
-          <div class="blk">
-            <div class="blk-title">2️⃣ Lịch làm việc cụ thể ngày</div>
-            <ul>${scheduleHtml || '<li style="color:var(--ink-soft);">Chưa có lịch</li>'}</ul>
-          </div>
-        </div>
-        ${actionsHtml}
-      </div>`;
-    } else {
-      const li = arr => (arr&&arr.length) ? arr.map(x=>`<li>${escapeHtml(x)}</li>`).join('') : '<li style="color:var(--ink-soft);">—</li>';
-      return `<div class="report-card eod">
-        <div class="rc-head">
-          <div><div class="rc-title">📝 BÁO CÁO CUỐI NGÀY ${fmtDateLabel(r.date)} - ${escapeHtml(shortName(r.employee))}</div>
-          <div class="rc-sub">${escapeHtml(r.employee)}</div></div>
-          <span class="rc-team">${r.team}</span>
-        </div>
-        <div class="rc-body">
-          <div class="blk">
-            <div class="blk-title">1️⃣ Kết quả so với kế hoạch</div>
-            <div style="font-size:12px;font-weight:700;color:var(--green);margin-top:4px;">✅ Đã đạt</div>
-            <ul>${li(r.achieved)}</ul>
-            <div style="font-size:12px;font-weight:700;color:var(--red);margin-top:6px;">❌ Chưa đạt</div>
-            <ul>${li(r.notAchieved)}</ul>
-          </div>
-          <div class="blk">
-            <div class="blk-title">2️⃣ Nguyên nhân</div>
-            <ul>${li(r.reasons)}</ul>
-          </div>
-          <div class="blk">
-            <div class="blk-title">3️⃣ Giải pháp / Action tiếp theo</div>
-            <ul>${li(r.actions)}</ul>
-          </div>
-        </div>
-        ${actionsHtml}
-      </div>`;
-    }
-  }).join('');
+const fDate =
+document
+.getElementById(
+'filterDate'
+).value;
 
-  if(isManagerUnlocked){
-    grid.querySelectorAll('button.del').forEach(b=>{
-      b.addEventListener('click', async ()=>{
-        if(!isManagerUnlocked) return;
-        reports = reports.filter(r=>r.id!==b.dataset.id);
-        await saveReports();
-        renderAll();
-      });
-    });
-    grid.querySelectorAll('button.edit').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        if(!isManagerUnlocked) return;
-        const r = reports.find(r=>r.id===b.dataset.id);
-        if(!r) return;
-        editingId = r.id;
-        document.getElementById('fEmployee').value = r.employee;
-        document.getElementById('fDate').value = r.date;
-        document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active', x.dataset.type===r.type));
-        currentType = r.type;
-        if(r.type==='plan'){
-          document.getElementById('planForm').style.display = '';
-          document.getElementById('eodForm').style.display = 'none';
-          document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo đầu ngày';
-          document.getElementById('kpiTkHkd').value = r.targets?.tkHkd || r.targets?.tkCnkd || '';
-          document.getElementById('kpiCc').value = r.targets?.cc || '';
-          document.getElementById('kpiTd').value = r.targets?.td || '';
-          document.getElementById('kpiUpl').value = r.targets?.upl || '';
-          document.getElementById('kpiPhi').value = r.targets?.phi || '';
-          document.getElementById('kpiPipeline').value = r.pipeline || '';
-          draft.schedule = [{label:'8H - 9H',task:''},{label:'9H - 10H',task:''},{label:'10H - 12H',task:''},{label:'13H30 - 14H30',task:''},{label:'14H30 - 16H',task:''},{label:'16H - 17H30',task:''}].map(slot=>{ const old=(r.schedule||[]).find(x=>x.label===slot.label); return old ? {...slot,task:old.task||''} : slot; });
-        } else {
-          document.getElementById('planForm').style.display = 'none';
-          document.getElementById('eodForm').style.display = '';
-          document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo cuối ngày';
-          draft.achieved = r.achieved && r.achieved.length ? [...r.achieved] : [''];
-          draft.notAchieved = r.notAchieved && r.notAchieved.length ? [...r.notAchieved] : [''];
-          draft.reasons = r.reasons && r.reasons.length ? [...r.reasons] : [''];
-          draft.actions = r.actions && r.actions.length ? [...r.actions] : [''];
-        }
-        renderAllDynamic();
-        window.scrollTo({top:0, behavior:'smooth'});
-      });
-    });
-  }
+
+const fTeam =
+document
+.getElementById(
+'filterTeam'
+).value;
+
+
+const fEmp =
+document
+.getElementById(
+'filterEmployee'
+).value;
+
+
+const fType =
+document
+.getElementById(
+'filterType'
+).value;
+
+
+let list =
+reports.filter(
+r => {
+
+if(
+fDate &&
+r.date !== fDate
+) return false;
+
+
+if(
+fTeam &&
+r.team !== fTeam
+) return false;
+
+
+if(
+fEmp &&
+r.employee !== fEmp
+) return false;
+
+
+if(
+fType &&
+r.type !== fType
+) return false;
+
+
+return true;
+
+});
+
+
+list.sort(
+(a,b)=>
+b.date.localeCompare(
+a.date
+)
+||
+a.employee.localeCompare(
+b.employee
+)
+);
+
+
+if(
+list.length === 0
+){
+
+grid.innerHTML =
+
+`<div class="empty-state">
+Chưa có báo cáo phù hợp bộ lọc.
+</div>`;
+
+return;
+
 }
 
-/* ---------- trạng thái đã điền / chưa điền ---------- */
-function renderStatusTable(){
-  const date = document.getElementById('statusDate').value || todayStr();
-  const dayReports = reports.filter(r=>r.date===date);
-  const tbody = document.getElementById('statusTableBody');
-  let html = '';
-  ['RMP','LS'].forEach(team=>{
-    html += `<tr class="team-row"><td colspan="3">TEAM ${team}</td></tr>`;
-    EMPLOYEES.filter(e=>e.team===team).forEach(emp=>{
-      const hasPlan = dayReports.some(r=>r.employee===emp.name && r.type==='plan');
-      const hasEod = dayReports.some(r=>r.employee===emp.name && r.type==='eod');
-      html += `<tr>
-        <td>${escapeHtml(emp.name)}</td>
-        <td><span class="status-pill ${hasPlan?'status-yes':'status-no'}">${hasPlan?'✅ Đã điền':'⏳ Chưa điền'}</span></td>
-        <td><span class="status-pill ${hasEod?'status-yes':'status-no'}">${hasEod?'✅ Đã điền':'⏳ Chưa điền'}</span></td>
-      </tr>`;
-    });
-  });
-  tbody.innerHTML = html;
+
+grid.innerHTML =
+list.map(
+r => {
+
+
+const actionsHtml =
+isManagerUnlocked
+
+? `<div class="rc-actions">
+
+<button
+class="edit"
+data-id="${r.id}">
+Sửa
+</button>
+
+<button
+class="del"
+data-id="${r.id}">
+Xóa
+</button>
+
+</div>`
+
+: '';
+
+
+if(
+r.type === 'plan'
+){
+
+const t =
+r.targets || {};
+
+
+const scheduleHtml =
+(r.schedule || [])
+
+.map(
+s =>
+
+`<li>
+
+<b>
+${escapeHtml(
+s.label || ''
+)}
+</b>:
+
+${escapeHtml(
+s.task || ''
+)}
+
+</li>`
+
+)
+
+.join('');
+
+
+return `
+
+<div class="report-card plan">
+
+<div class="rc-head">
+
+<div>
+
+<div class="rc-title">
+
+📊 DAILY PLAN ngày
+${fmtDateLabel(r.date)}
+-
+${escapeHtml(
+shortName(
+r.employee
+)
+)}
+
+</div>
+
+<div class="rc-sub">
+${escapeHtml(
+r.employee
+)}
+</div>
+
+</div>
+
+<span class="rc-team">
+${r.team}
+</span>
+
+</div>
+
+
+<div class="rc-body">
+
+<div class="blk">
+
+<div class="blk-title">
+1️⃣ Mục tiêu hôm nay
+</div>
+
+
+<div class="kpi-line">
+
+<span>TK HKD</span>
+
+<b>
+${escapeHtml(
+t.tkHkd
+||
+t.tkCnkd
+||
+'0'
+)}
+</b>
+
+</div>
+
+
+<div class="kpi-line">
+
+<span>CC</span>
+
+<b>
+${escapeHtml(
+t.cc || '0'
+)}
+</b>
+
+</div>
+
+
+<div class="kpi-line">
+
+<span>TD</span>
+
+<b>
+${escapeHtml(
+t.td || '0'
+)}
+</b>
+
+</div>
+
+
+<div class="kpi-line">
+
+<span>UPL</span>
+
+<b>
+${escapeHtml(
+t.upl || '0'
+)}
+</b>
+
+</div>
+
+
+<div class="kpi-line">
+
+<span>PHÍ</span>
+
+<b>
+${escapeHtml(
+t.phi || '0'
+)}
+</b>
+
+</div>
+
+
+${
+
+r.pipeline
+
+? `<div style="
+margin-top:6px;
+font-size:12px;
+color:var(--ink-soft);
+">
+
+Pipeline:
+${escapeHtml(
+r.pipeline
+)}
+
+</div>`
+
+: ''
+
 }
-document.getElementById('statusDate').addEventListener('change', renderStatusTable);
 
-/* ---------- pie chart tổng hợp mục tiêu ---------- */
-function renderPieChart(){
-  const date = document.getElementById('pieDate').value || todayStr();
-  const plans = reports.filter(r=>r.date===date && r.type==='plan');
-  const totals = {tkHkd:0, cc:0, td:0, upl:0, phi:0};
-  plans.forEach(p=>{
-    const t = p.targets || {};
-    totals.tkHkd += Number(t.tkHkd ?? t.tkCnkd) || 0;
-    totals.cc += Number(t.cc) || 0;
-    totals.td += Number(t.td) || 0;
-    totals.upl += Number(t.upl) || 0;
-    totals.phi += Number(t.phi) || 0;
-  });
-  const labels = ['TK HKD','CC','TD','UPL','PHÍ'];
-  const values = [totals.tkHkd, totals.cc, totals.td, totals.upl, totals.phi];
-  const grandTotal = values.reduce((a,b)=>a+b,0);
-  const noteEl = document.getElementById('pieEmptyNote');
+</div>
 
-  const canvas = document.getElementById('targetPieChart');
-  if(pieChartInstance){ pieChartInstance.destroy(); pieChartInstance = null; }
 
-  if(grandTotal === 0){
-    noteEl.textContent = 'Chưa có mục tiêu nào được ghi nhận cho ngày này.';
-    return;
-  }
-  noteEl.textContent = `Tổng cộng: ${grandTotal} (từ ${plans.length} báo cáo đầu ngày)`;
+<div class="blk">
 
-  if(typeof Chart === 'undefined'){
-    noteEl.textContent += ' — không tải được thư viện biểu đồ (kiểm tra kết nối mạng).';
-    return;
-  }
+<div class="blk-title">
+2️⃣ Lịch làm việc cụ thể ngày
+</div>
 
-  pieChartInstance = new Chart(canvas, {
-    type: 'pie',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: PIE_COLORS,
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } },
-        tooltip: {
-          callbacks: {
-            label: (ctx)=>{
-              const pct = grandTotal ? ((ctx.parsed / grandTotal) * 100).toFixed(1) : 0;
-              return `${ctx.label}: ${ctx.parsed} (${pct}%)`;
-            }
-          }
-        }
-      }
-    }
-  });
-}
-document.getElementById('pieDate').addEventListener('change', renderPieChart);
+<ul>
 
-document.getElementById('filterDate').addEventListener('change', renderReportsList);
-document.getElementById('filterTeam').addEventListener('change', renderReportsList);
-document.getElementById('filterEmployee').addEventListener('change', renderReportsList);
-document.getElementById('filterType').addEventListener('change', renderReportsList);
-document.getElementById('clearFilters').addEventListener('click', ()=>{
-  document.getElementById('filterDate').value = '';
-  document.getElementById('filterTeam').value = '';
-  document.getElementById('filterEmployee').value = '';
-  document.getElementById('filterType').value = '';
-  renderReportsList();
-});
+${
 
-/* ---------- manual refresh ---------- */
-async function refreshReports(){
-  const btn = document.getElementById('refreshBtn');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  await loadReports();
-  btn.classList.remove('loading');
-  btn.disabled = false;
-  document.getElementById('lastSync').textContent = 'Cập nhật lúc ' + fmtTimeLabel(new Date());
-}
-document.getElementById('refreshBtn').addEventListener('click', refreshReports);
+scheduleHtml
 
-/* ---------- consolidated end-of-day summary (text) ---------- */
-function buildSummaryText(date){
-  const dayReports = reports.filter(r=>r.date===date);
-  const lines = [];
-  lines.push(`BÁO CÁO TỔNG HỢP NGÀY ${fmtDateLabel(date)}`);
-  lines.push('='.repeat(40));
-  ['RMP','LS'].forEach(team=>{
-    const teamEmployees = EMPLOYEES.filter(e=>e.team===team);
-    lines.push('');
-    lines.push(`TEAM ${team}`);
-    lines.push('-'.repeat(40));
-    const totals = {tkHkd:0, cc:0, td:0, upl:0, phi:0};
-    teamEmployees.forEach(emp=>{
-      const plan = dayReports.find(r=>r.employee===emp.name && r.type==='plan');
-      const eod = dayReports.find(r=>r.employee===emp.name && r.type==='eod');
-      lines.push(`• ${emp.name}`);
-      if(plan){
-        const t = plan.targets || {};
-        totals.tkHkd += Number(t.tkHkd ?? t.tkCnkd)||0;
-        totals.cc += Number(t.cc)||0;
-        totals.td += Number(t.td)||0;
-        totals.upl += Number(t.upl)||0;
-        totals.phi += Number(t.phi)||0;
-        lines.push(`   Mục tiêu: TK HKD ${t.tkHkd ?? t.tkCnkd ?? 0} | CC ${t.cc||0} | TD ${t.td||0} | UPL ${t.upl||0} | PHÍ ${t.phi||0}`);
-        if(plan.pipeline) lines.push(`   Pipeline: ${plan.pipeline}`);
-      } else {
-        lines.push('   Mục tiêu: chưa cập nhật');
-      }
-      if(eod){
-        if(eod.achieved && eod.achieved.length) lines.push('   Đã đạt: ' + eod.achieved.join('; '));
-        if(eod.notAchieved && eod.notAchieved.length) lines.push('   Chưa đạt: ' + eod.notAchieved.join('; '));
-        if(eod.reasons && eod.reasons.length) lines.push('   Nguyên nhân: ' + eod.reasons.join('; '));
-        if(eod.actions && eod.actions.length) lines.push('   Action: ' + eod.actions.join('; '));
-      } else {
-        lines.push('   Cuối ngày: chưa cập nhật');
-      }
-      lines.push('');
-    });
-    lines.push(`Tổng mục tiêu Team ${team}: TK HKD ${totals.tkHkd} | CC ${totals.cc} | TD ${totals.td} | UPL ${totals.upl} | PHÍ ${totals.phi}`);
-  });
-  return lines.join('\n');
+||
+
+'<li style="color:var(--ink-soft);">Chưa có lịch</li>'
+
 }
 
-document.getElementById('genSummaryBtn').addEventListener('click', ()=>{
-  const date = document.getElementById('summaryDate').value || todayStr();
-  document.getElementById('summaryOutput').value = buildSummaryText(date);
-});
-document.getElementById('copySummaryBtn').addEventListener('click', async ()=>{
-  const text = document.getElementById('summaryOutput').value;
-  if(!text) return;
-  try{
-    await navigator.clipboard.writeText(text);
-    const btn = document.getElementById('copySummaryBtn');
-    const old = btn.textContent;
-    btn.textContent = 'Đã sao chép ✓';
-    setTimeout(()=>{ btn.textContent = old; }, 1500);
-  }catch(e){ alert('Không thể sao chép, vui lòng chọn và copy thủ công.'); }
-});
-document.getElementById('downloadSummaryBtn').addEventListener('click', ()=>{
-  const text = document.getElementById('summaryOutput').value;
-  if(!text) return;
-  const date = document.getElementById('summaryDate').value || todayStr();
-  const blob = new Blob(['\uFEFF'+text], {type:'text/plain;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `bao_cao_tong_hop_${date}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
+</ul>
+
+</div>
+
+</div>
+
+${actionsHtml}
+
+</div>
+
+`;
+
+}
+
+
+else{
+
+const li =
+arr =>
+
+(
+arr &&
+arr.length
+)
+
+?
+
+arr
+.map(
+x =>
+`<li>
+${escapeHtml(x)}
+</li>`
+)
+.join('')
+
+:
+
+'<li style="color:var(--ink-soft);">—</li>';
+
+
+return `
+
+<div class="report-card eod">
+
+<div class="rc-head">
+
+<div>
+
+<div class="rc-title">
+
+📝 BÁO CÁO CUỐI NGÀY
+
+${fmtDateLabel(
+r.date
+)}
+
+-
+
+${escapeHtml(
+shortName(
+r.employee
+)
+)}
+
+</div>
+
+
+<div class="rc-sub">
+
+${escapeHtml(
+r.employee
+)}
+
+</div>
+
+</div>
+
+
+<span class="rc-team">
+
+${r.team}
+
+</span>
+
+</div>
+
+
+<div class="rc-body">
+
+<div class="blk">
+
+<div class="blk-title">
+
+1️⃣ Kết quả so với kế hoạch
+
+</div>
+
+
+<div style="
+font-size:12px;
+font-weight:700;
+color:var(--green);
+margin-top:4px;
+">
+
+✅ Đã đạt
+
+</div>
+
+<ul>
+${li(
+r.achieved
+)}
+</ul>
+
+
+<div style="
+font-size:12px;
+font-weight:700;
+color:var(--red);
+margin-top:6px;
+">
+
+❌ Chưa đạt
+
+</div>
+
+<ul>
+
+${li(
+r.notAchieved
+)}
+
+</ul>
+
+</div>
+
+
+<div class="blk">
+
+<div class="blk-title">
+
+2️⃣ Nguyên nhân
+
+</div>
+
+<ul>
+
+${li(
+r.reasons
+)}
+
+</ul>
+
+</div>
+
+
+<div class="blk">
+
+<div class="blk-title">
+
+3️⃣ Giải pháp / Action tiếp theo
+
+</div>
+
+<ul>
+
+${li(
+r.actions
+)}
+
+</ul>
+
+</div>
+
+</div>
+
+
+${actionsHtml}
+
+</div>
+
+`;
+
+}
+
+})
+.join('');
+
+
+/* DELETE */
+
+if(
+isManagerUnlocked
+){
+
+grid
+.querySelectorAll(
+'button.del'
+)
+.forEach(
+b => {
+
+b.addEventListener(
+'click',
+async ()=>{
+
+reports =
+reports.filter(
+r =>
+r.id !==
+b.dataset.id
+);
+
+
+await saveReports();
+
+renderAll();
+
 });
 
-/* ---------- manager inline gate (chỉ ảnh hưởng quyền sửa/xóa) ---------- */
-document.getElementById('managerUnlockBtn').addEventListener('click', ()=>{
-  const val = document.getElementById('managerPass').value;
-  if(val === MANAGER_PASSCODE){
-    isManagerUnlocked = true;
-    document.getElementById('managerPass').value = '';
-    document.getElementById('managerBoxLocked').style.display = 'none';
-    document.getElementById('managerBoxUnlocked').style.display = '';
-    renderReportsList();
-  } else {
-    alert('Sai mã truy cập.');
-  }
-});
-document.getElementById('managerPass').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter') document.getElementById('managerUnlockBtn').click();
-});
-document.getElementById('managerLockAgainBtn').addEventListener('click', ()=>{
-  isManagerUnlocked = false;
-  document.getElementById('managerBoxUnlocked').style.display = 'none';
-  document.getElementById('managerBoxLocked').style.display = '';
-  renderReportsList();
 });
 
-/* ---------- init ---------- */
-initEmployeeSelects();
-document.getElementById('fDate').value = todayStr();
-document.getElementById('summaryDate').value = todayStr();
-document.getElementById('statusDate').value = todayStr();
-document.getElementById('pieDate').value = todayStr();
+
+/* EDIT */
+
+grid
+.querySelectorAll(
+'button.edit'
+)
+.forEach(
+b => {
+
+b.addEventListener(
+'click',
+()=>{
+
+const r =
+reports.find(
+r =>
+r.id ===
+b.dataset.id
+);
+
+
+if(!r) return;
+
+
+editingId =
+r.id;
+
+
+document
+.getElementById(
+'fEmployee'
+).value =
+r.employee;
+
+
+document
+.getElementById(
+'fDate'
+).value =
+r.date;
+
+
+document
+.querySelectorAll(
+'.tab-btn'
+)
+.forEach(
+x =>
+x.classList.toggle(
+'active',
+x.dataset.type ===
+r.type
+)
+);
+
+
+currentType =
+r.type;
+
+
+if(
+r.type === 'plan'
+){
+
+document
+.getElementById(
+'planForm'
+)
+.style.display = '';
+
+
+document
+.getElementById(
+'eodForm'
+)
+.style.display = 'none';
+
+
+document
+.getElementById(
+'formTitle'
+)
+.textContent =
+'Chỉnh sửa báo cáo đầu ngày';
+
+
+document
+.getElementById(
+'kpiTkHkd'
+).value =
+r.targets?.tkHkd
+||
+r.targets?.tkCnkd
+||
+'';
+
+
+document
+.getElementById(
+'kpiCc'
+).value =
+r.targets?.cc
+||
+'';
+
+
+document
+.getElementById(
+'kpiTd'
+).value =
+r.targets?.td
+||
+'';
+
+
+document
+.getElementById(
+'kpiUpl'
+).value =
+r.targets?.upl
+||
+'';
+
+
+document
+.getElementById(
+'kpiPhi'
+).value =
+r.targets?.phi
+||
+'';
+
+
+document
+.getElementById(
+'kpiPipeline'
+).value =
+r.pipeline
+||
+'';
+
+
+draft.schedule = [
+
+{label:'8H - 9H',task:''},
+{label:'9H - 10H',task:''},
+{label:'10H - 12H',task:''},
+{label:'13H30 - 14H30',task:''},
+{label:'14H30 - 16H',task:''},
+{label:'16H - 17H30',task:''}
+
+].map(
+slot => {
+
+const old =
+(r.schedule || [])
+.find(
+x =>
+x.label ===
+slot.label
+);
+
+return old
+
+? {
+...slot,
+task:
+old.task || ''
+}
+
+: slot;
+
+});
+
+}
+
+else{
+
+document
+.getElementById(
+'planForm'
+)
+.style.display = 'none';
+
+
+document
+.getElementById(
+'eodForm'
+)
+.style.display = '';
+
+
+document
+.getElementById(
+'formTitle'
+)
+.textContent =
+'Chỉnh sửa báo cáo cuối ngày';
+
+
+draft.achieved =
+r.achieved &&
+r.achieved.length
+
+? [...r.achieved]
+
+: [''];
+
+
+draft.notAchieved =
+r.notAchieved &&
+r.notAchieved.length
+
+? [...r.notAchieved]
+
+: [''];
+
+
+draft.reasons =
+r.reasons &&
+r.reasons.length
+
+? [...r.reasons]
+
+: [''];
+
+
+draft.actions =
+r.actions &&
+r.actions.length
+
+? [...r.actions]
+
+: [''];
+
+}
+
+
 renderAllDynamic();
+
+
+window.scrollTo({
+top:0,
+behavior:'smooth'
+});
+
+});
+
+});
+
+}
+
+}
+
+
+/* =====================================================
+STATUS TABLE
+===================================================== */
+
+function renderStatusTable(){
+
+const date =
+document
+.getElementById(
+'statusDate'
+).value
+||
+todayStr();
+
+
+const dayReports =
+reports.filter(
+r =>
+r.date === date
+);
+
+
+const tbody =
+document
+.getElementById(
+'statusTableBody'
+);
+
+
+let html = '';
+
+
+[
+'RMP',
+'LS'
+]
+.forEach(
+team => {
+
+
+html +=
+
+`<tr class="team-row">
+
+<td colspan="3">
+
+TEAM ${team}
+
+</td>
+
+</tr>`;
+
+
+EMPLOYEES
+
+.filter(
+e =>
+e.team === team
+)
+
+.forEach(
+emp => {
+
+
+const hasPlan =
+dayReports.some(
+r =>
+r.employee ===
+emp.name
+&&
+r.type ===
+'plan'
+);
+
+
+const hasEod =
+dayReports.some(
+r =>
+r.employee ===
+emp.name
+&&
+r.type ===
+'eod'
+);
+
+
+html += `
+
+<tr>
+
+<td>
+${escapeHtml(
+emp.name
+)}
+</td>
+
+
+<td>
+
+<span class="
+status-pill
+${hasPlan
+? 'status-yes'
+: 'status-no'
+}
+">
+
+${hasPlan
+? '✅ Đã điền'
+: '⏳ Chưa điền'
+}
+
+</span>
+
+</td>
+
+
+<td>
+
+<span class="
+status-pill
+${hasEod
+? 'status-yes'
+: 'status-no'
+}
+">
+
+${hasEod
+? '✅ Đã điền'
+: '⏳ Chưa điền'
+}
+
+</span>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+});
+
+
+tbody.innerHTML =
+html;
+
+}
+
+
+document
+.getElementById(
+'statusDate'
+)
+.addEventListener(
+'change',
+renderStatusTable
+);
+
+
+/* =====================================================
+5 PIE CHARTS
+===================================================== */
+
+function renderPieChart(){
+
+const date =
+document
+.getElementById(
+'pieDate'
+).value
+||
+todayStr();
+
+
+/*
+CHỈ LẤY BÁO CÁO ĐẦU NGÀY
+*/
+
+const plans =
+reports.filter(
+r =>
+r.date === date
+&&
+r.type === 'plan'
+);
+
+
+/*
+TOTAL THEO TEAM
+*/
+
+const teamTotals = {
+
+RMP:{
+tkHkd:0,
+cc:0,
+td:0,
+upl:0,
+phi:0
+},
+
+LS:{
+tkHkd:0,
+cc:0,
+td:0,
+upl:0,
+phi:0
+}
+
+};
+
+
+/*
+CỘNG TARGET
+*/
+
+plans.forEach(
+p => {
+
+const team =
+p.team;
+
+
+if(
+!teamTotals[team]
+) return;
+
+
+const t =
+p.targets || {};
+
+
+teamTotals[team].tkHkd +=
+Number(
+t.tkHkd ??
+t.tkCnkd
+)
+||
+0;
+
+
+teamTotals[team].cc +=
+Number(
+t.cc
+)
+||
+0;
+
+
+teamTotals[team].td +=
+Number(
+t.td
+)
+||
+0;
+
+
+teamTotals[team].upl +=
+Number(
+t.upl
+)
+||
+0;
+
+
+teamTotals[team].phi +=
+Number(
+t.phi
+)
+||
+0;
+
+});
+
+
+/*
+DESTROY OLD CHARTS
+*/
+
+Object
+.values(
+pieChartInstances
+)
+.forEach(
+chart => {
+
+if(chart){
+
+chart.destroy();
+
+}
+
+});
+
+
+pieChartInstances = {};
+
+
+/*
+KPI CONFIG
+*/
+
+const kpis = [
+
+{
+key:'tkHkd',
+canvas:'pieTkHkd',
+totalEl:'totalTkHkd',
+rmpEl:'tkHkdRmp',
+lsEl:'tkHkdLs'
+},
+
+{
+key:'cc',
+canvas:'pieCc',
+totalEl:'totalCc',
+rmpEl:'ccRmp',
+lsEl:'ccLs'
+},
+
+{
+key:'td',
+canvas:'pieTd',
+totalEl:'totalTd',
+rmpEl:'tdRmp',
+lsEl:'tdLs'
+},
+
+{
+key:'upl',
+canvas:'pieUpl',
+totalEl:'totalUpl',
+rmpEl:'uplRmp',
+lsEl:'uplLs'
+},
+
+{
+key:'phi',
+canvas:'piePhi',
+totalEl:'totalPhi',
+rmpEl:'phiRmp',
+lsEl:'phiLs'
+}
+
+];
+
+
+/*
+CREATE CHART
+*/
+
+kpis.forEach(
+kpi => {
+
+const rmp =
+teamTotals.RMP[
+kpi.key
+];
+
+
+const ls =
+teamTotals.LS[
+kpi.key
+];
+
+
+const total =
+rmp + ls;
+
+
+/*
+TEXT VALUES
+*/
+
+document
+.getElementById(
+kpi.totalEl
+)
+.textContent =
+`Tổng: ${formatKpiNumber(total)}`;
+
+
+document
+.getElementById(
+kpi.rmpEl
+)
+.textContent =
+`RMP: ${formatKpiNumber(rmp)}`;
+
+
+document
+.getElementById(
+kpi.lsEl
+)
+.textContent =
+`LS: ${formatKpiNumber(ls)}`;
+
+
+/*
+CANVAS
+*/
+
+const canvas =
+document
+.getElementById(
+kpi.canvas
+);
+
+
+if(!canvas) return;
+
+
+/*
+NO DATA
+*/
+
+const dataValues =
+total > 0
+
+? [
+rmp,
+ls
+]
+
+: [
+1
+];
+
+
+const labels =
+total > 0
+
+? [
+'Team RMP',
+'Team LS'
+]
+
+: [
+'Chưa có dữ liệu'
+];
+
+
+const colors =
+total > 0
+
+? [
+'#00733C',
+'#B4880B'
+]
+
+: [
+'#DCE8E1'
+];
+
+
+/*
+NEW CHART
+*/
+
+pieChartInstances[
+kpi.key
+] =
+
+new Chart(
+canvas,
+{
+
+type:'pie',
+
+data:{
+
+labels,
+
+datasets:[{
+
+data:
+dataValues,
+
+backgroundColor:
+colors,
+
+borderColor:
+'#FFFFFF',
+
+borderWidth:3,
+
+hoverOffset:4
+
+}]
+
+},
+
+
+options:{
+
+responsive:true,
+
+maintainAspectRatio:false,
+
+animation:{
+
+duration:500
+
+},
+
+plugins:{
+
+legend:{
+
+display:
+total > 0,
+
+position:'bottom',
+
+labels:{
+
+boxWidth:9,
+
+boxHeight:9,
+
+usePointStyle:true,
+
+pointStyle:'circle',
+
+padding:10,
+
+font:{
+
+family:'Inter',
+
+size:10,
+
+weight:'600'
+
+}
+
+}
+
+},
+
+
+tooltip:{
+
+enabled:
+total > 0,
+
+callbacks:{
+
+label:
+ctx => {
+
+const value =
+Number(
+ctx.parsed
+)
+||
+0;
+
+
+const pct =
+total
+
+? (
+(value / total)
+*
+100
+)
+.toFixed(1)
+
+: 0;
+
+
+return (
+`${ctx.label}: `
++
+`${formatKpiNumber(value)} `
++
+`(${pct}%)`
+);
+
+}
+
+}
+
+}
+
+}
+
+}
+
+}
+);
+
+});
+
+
+/*
+HOW MANY PEOPLE SUBMITTED
+*/
+
+const rmpPlanEmployees =
+new Set(
+
+plans
+.filter(
+r =>
+r.team ===
+'RMP'
+)
+.map(
+r =>
+r.employee
+)
+
+).size;
+
+
+const lsPlanEmployees =
+new Set(
+
+plans
+.filter(
+r =>
+r.team ===
+'LS'
+)
+.map(
+r =>
+r.employee
+)
+
+).size;
+
+
+/*
+SUMMARY LINE
+*/
+
+document
+.getElementById(
+'pieSummary'
+)
+.innerHTML = `
+
+<b>
+${fmtDateLabel(date)}
+</b>
+
+&nbsp;•&nbsp;
+
+Báo cáo đầu ngày:
+
+<b>
+${plans.length}/11
+</b>
+
+&nbsp;•&nbsp;
+
+Team RMP:
+
+<b>
+${rmpPlanEmployees}/5
+</b>
+
+&nbsp;•&nbsp;
+
+Team LS:
+
+<b>
+${lsPlanEmployees}/6
+</b>
+
+`;
+
+}
+
+
+document
+.getElementById(
+'pieDate'
+)
+.addEventListener(
+'change',
+renderPieChart
+);
+
+
+/* =====================================================
+FILTERS
+===================================================== */
+
+document
+.getElementById(
+'filterDate'
+)
+.addEventListener(
+'change',
+renderReportsList
+);
+
+
+document
+.getElementById(
+'filterTeam'
+)
+.addEventListener(
+'change',
+renderReportsList
+);
+
+
+document
+.getElementById(
+'filterEmployee'
+)
+.addEventListener(
+'change',
+renderReportsList
+);
+
+
+document
+.getElementById(
+'filterType'
+)
+.addEventListener(
+'change',
+renderReportsList
+);
+
+
+document
+.getElementById(
+'clearFilters'
+)
+.addEventListener(
+'click',
+()=>{
+
+document
+.getElementById(
+'filterDate'
+).value = '';
+
+
+document
+.getElementById(
+'filterTeam'
+).value = '';
+
+
+document
+.getElementById(
+'filterEmployee'
+).value = '';
+
+
+document
+.getElementById(
+'filterType'
+).value = '';
+
+
+renderReportsList();
+
+});
+
+
+/* =====================================================
+REFRESH
+===================================================== */
+
+async function refreshReports(){
+
+const btn =
+document
+.getElementById(
+'refreshBtn'
+);
+
+
+btn.classList.add(
+'loading'
+);
+
+
+btn.disabled =
+true;
+
+
+await loadReports();
+
+
+btn.classList.remove(
+'loading'
+);
+
+
+btn.disabled =
+false;
+
+
+document
+.getElementById(
+'lastSync'
+)
+.textContent =
+'Cập nhật lúc '
++
+fmtTimeLabel(
+new Date()
+);
+
+}
+
+
+document
+.getElementById(
+'refreshBtn'
+)
+.addEventListener(
+'click',
+refreshReports
+);
+
+
+/* =====================================================
+BUILD SUMMARY TEXT
+===================================================== */
+
+function buildSummaryText(date){
+
+const dayReports =
+reports.filter(
+r =>
+r.date === date
+);
+
+
+const lines = [];
+
+
+lines.push(
+
+`BÁO CÁO TỔNG HỢP NGÀY ${fmtDateLabel(date)}`
+
+);
+
+
+lines.push(
+'='.repeat(40)
+);
+
+
+[
+'RMP',
+'LS'
+]
+.forEach(
+team => {
+
+
+const teamEmployees =
+EMPLOYEES.filter(
+e =>
+e.team === team
+);
+
+
+lines.push('');
+
+lines.push(
+`TEAM ${team}`
+);
+
+lines.push(
+'-'.repeat(40)
+);
+
+
+const totals = {
+
+tkHkd:0,
+cc:0,
+td:0,
+upl:0,
+phi:0
+
+};
+
+
+teamEmployees.forEach(
+emp => {
+
+
+const plan =
+dayReports.find(
+r =>
+r.employee ===
+emp.name
+&&
+r.type ===
+'plan'
+);
+
+
+const eod =
+dayReports.find(
+r =>
+r.employee ===
+emp.name
+&&
+r.type ===
+'eod'
+);
+
+
+lines.push(
+`• ${emp.name}`
+);
+
+
+if(plan){
+
+const t =
+plan.targets || {};
+
+
+totals.tkHkd +=
+Number(
+t.tkHkd ??
+t.tkCnkd
+)
+||
+0;
+
+
+totals.cc +=
+Number(
+t.cc
+)
+||
+0;
+
+
+totals.td +=
+Number(
+t.td
+)
+||
+0;
+
+
+totals.upl +=
+Number(
+t.upl
+)
+||
+0;
+
+
+totals.phi +=
+Number(
+t.phi
+)
+||
+0;
+
+
+lines.push(
+
+`   Mục tiêu: TK HKD ${t.tkHkd ?? t.tkCnkd ?? 0} | CC ${t.cc || 0} | TD ${t.td || 0} | UPL ${t.upl || 0} | PHÍ ${t.phi || 0}`
+
+);
+
+
+if(
+plan.pipeline
+){
+
+lines.push(
+`   Pipeline: ${plan.pipeline}`
+);
+
+}
+
+}
+
+else{
+
+lines.push(
+'   Mục tiêu: chưa cập nhật'
+);
+
+}
+
+
+if(eod){
+
+if(
+eod.achieved &&
+eod.achieved.length
+){
+
+lines.push(
+'   Đã đạt: '
++
+eod.achieved.join('; ')
+);
+
+}
+
+
+if(
+eod.notAchieved &&
+eod.notAchieved.length
+){
+
+lines.push(
+'   Chưa đạt: '
++
+eod.notAchieved.join('; ')
+);
+
+}
+
+
+if(
+eod.reasons &&
+eod.reasons.length
+){
+
+lines.push(
+'   Nguyên nhân: '
++
+eod.reasons.join('; ')
+);
+
+}
+
+
+if(
+eod.actions &&
+eod.actions.length
+){
+
+lines.push(
+'   Action: '
++
+eod.actions.join('; ')
+);
+
+}
+
+}
+
+else{
+
+lines.push(
+'   Cuối ngày: chưa cập nhật'
+);
+
+}
+
+
+lines.push('');
+
+});
+
+
+lines.push(
+
+`Tổng mục tiêu Team ${team}: TK HKD ${totals.tkHkd} | CC ${totals.cc} | TD ${totals.td} | UPL ${totals.upl} | PHÍ ${totals.phi}`
+
+);
+
+});
+
+
+return lines.join(
+'\n'
+);
+
+}
+
+
+/* =====================================================
+GENERATE SUMMARY
+===================================================== */
+
+document
+.getElementById(
+'genSummaryBtn'
+)
+.addEventListener(
+'click',
+()=>{
+
+const date =
+document
+.getElementById(
+'summaryDate'
+).value
+||
+todayStr();
+
+
+document
+.getElementById(
+'summaryOutput'
+)
+.value =
+buildSummaryText(
+date
+);
+
+});
+
+
+/* =====================================================
+COPY SUMMARY
+===================================================== */
+
+document
+.getElementById(
+'copySummaryBtn'
+)
+.addEventListener(
+'click',
+async ()=>{
+
+const text =
+document
+.getElementById(
+'summaryOutput'
+).value;
+
+
+if(!text) return;
+
+
+try{
+
+await navigator
+.clipboard
+.writeText(
+text
+);
+
+
+const btn =
+document
+.getElementById(
+'copySummaryBtn'
+);
+
+
+const old =
+btn.textContent;
+
+
+btn.textContent =
+'Đã sao chép ✓';
+
+
+setTimeout(
+()=>{
+
+btn.textContent =
+old;
+
+},
+1500
+);
+
+
+}catch(e){
+
+alert(
+'Không thể sao chép, vui lòng chọn và copy thủ công.'
+);
+
+}
+
+});
+
+
+/* =====================================================
+DOWNLOAD SUMMARY
+===================================================== */
+
+document
+.getElementById(
+'downloadSummaryBtn'
+)
+.addEventListener(
+'click',
+()=>{
+
+const text =
+document
+.getElementById(
+'summaryOutput'
+).value;
+
+
+if(!text) return;
+
+
+const date =
+document
+.getElementById(
+'summaryDate'
+).value
+||
+todayStr();
+
+
+const blob =
+new Blob(
+
+[
+'\uFEFF'
++
+text
+],
+
+{
+type:
+'text/plain;charset=utf-8;'
+}
+
+);
+
+
+const url =
+URL.createObjectURL(
+blob
+);
+
+
+const a =
+document.createElement(
+'a'
+);
+
+
+a.href =
+url;
+
+
+a.download =
+`bao_cao_tong_hop_${date}.txt`;
+
+
+a.click();
+
+
+URL.revokeObjectURL(
+url
+);
+
+});
+
+
+/* =====================================================
+MANAGER LOGIN
+===================================================== */
+
+document
+.getElementById(
+'managerUnlockBtn'
+)
+.addEventListener(
+'click',
+()=>{
+
+const val =
+document
+.getElementById(
+'managerPass'
+).value;
+
+
+if(
+val ===
+MANAGER_PASSCODE
+){
+
+isManagerUnlocked =
+true;
+
+
+document
+.getElementById(
+'managerPass'
+).value = '';
+
+
+document
+.getElementById(
+'managerBoxLocked'
+)
+.style.display =
+'none';
+
+
+document
+.getElementById(
+'managerBoxUnlocked'
+)
+.style.display =
+'';
+
+
+renderReportsList();
+
+}
+
+else{
+
+alert(
+'Sai mã truy cập.'
+);
+
+}
+
+});
+
+
+document
+.getElementById(
+'managerPass'
+)
+.addEventListener(
+'keydown',
+e => {
+
+if(
+e.key ===
+'Enter'
+){
+
+document
+.getElementById(
+'managerUnlockBtn'
+)
+.click();
+
+}
+
+});
+
+
+document
+.getElementById(
+'managerLockAgainBtn'
+)
+.addEventListener(
+'click',
+()=>{
+
+isManagerUnlocked =
+false;
+
+
+document
+.getElementById(
+'managerBoxUnlocked'
+)
+.style.display =
+'none';
+
+
+document
+.getElementById(
+'managerBoxLocked'
+)
+.style.display =
+'';
+
+
+renderReportsList();
+
+});
+
+
+/* =====================================================
+INIT
+===================================================== */
+
+initEmployeeSelects();
+
+
+document
+.getElementById(
+'fDate'
+).value =
+todayStr();
+
+
+document
+.getElementById(
+'summaryDate'
+).value =
+todayStr();
+
+
+document
+.getElementById(
+'statusDate'
+).value =
+todayStr();
+
+
+document
+.getElementById(
+'pieDate'
+).value =
+todayStr();
+
+
+renderAllDynamic();
+
+
 loadReports();
+
 </script>
+
 </body>
 </html>
