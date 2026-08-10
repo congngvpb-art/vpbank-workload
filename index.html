@@ -2430,20 +2430,31 @@ try{
 
 const res =
 await fetch(
-SHEET_API_URL,
+SHEET_API_URL + '?t=' + Date.now(),
 {
-method:'GET'
+method:'GET',
+cache:'no-store'
 }
 );
 
+if(!res.ok){
+  throw new Error('Lỗi HTTP ' + res.status);
+}
 
-const data =
+const result =
 await res.json();
 
+if(!result || result.status !== 'ok'){
+  throw new Error(
+    result && result.message
+      ? result.message
+      : 'Apps Script không trả dữ liệu hợp lệ.'
+  );
+}
 
 reports =
-Array.isArray(data)
-? data
+Array.isArray(result.records)
+? result.records
 : [];
 
 
@@ -2455,6 +2466,11 @@ e
 );
 
 reports = [];
+
+alert(
+'Không tải được dữ liệu từ Google Sheet.\n\n' +
+e.message
+);
 
 }
 
@@ -2473,7 +2489,7 @@ async function saveRecordRemote(record){
 
 try{
 
-await fetch(
+const res = await fetch(
 SHEET_API_URL,
 {
 method:'POST',
@@ -2484,7 +2500,24 @@ record: record
 }
 );
 
-return true;
+if(!res.ok){
+  throw new Error('Lỗi HTTP ' + res.status);
+}
+
+const result = await res.json();
+
+if(!result || result.status !== 'ok'){
+  throw new Error(
+    result && result.message
+      ? result.message
+      : 'Apps Script không lưu được báo cáo.'
+  );
+}
+
+return {
+  success:true,
+  result:result
+};
 
 }catch(e){
 
@@ -2497,7 +2530,10 @@ alert(
 'Không lưu được lên Google Sheet. Kiểm tra kết nối mạng và thử lại.'
 );
 
-return false;
+return {
+  success:false,
+  error:e
+};
 
 }
 
@@ -2508,7 +2544,7 @@ async function deleteRecordRemote(id){
 
 try{
 
-await fetch(
+const res = await fetch(
 SHEET_API_URL,
 {
 method:'POST',
@@ -2519,7 +2555,25 @@ id: id
 }
 );
 
-return true;
+if(!res.ok){
+  throw new Error('Lỗi HTTP ' + res.status);
+}
+
+const result = await res.json();
+
+if(!result || result.status !== 'ok'){
+  throw new Error(
+    result && result.message
+      ? result.message
+      : 'Apps Script không xóa được báo cáo.'
+  );
+}
+
+return {
+  success:true,
+  deleted:result.deleted,
+  result:result
+};
 
 }catch(e){
 
@@ -2532,7 +2586,10 @@ alert(
 'Không xóa được trên Google Sheet. Kiểm tra kết nối mạng và thử lại.'
 );
 
-return false;
+return {
+  success:false,
+  error:e
+};
 
 }
 
@@ -2717,38 +2774,25 @@ s => s.trim()
 }
 
 
-/* cập nhật tạm trên UI trước cho mượt */
+/* Chỉ cập nhật giao diện sau khi Apps Script xác nhận lưu thành công. */
 
-const idx =
-reports.findIndex(
-r => r.id === recordId
-);
-
-if(idx >= 0){
-  reports[idx] = record;
-}else{
-  reports.push(record);
-}
-
-
-editingId =
-null;
-
-
-renderAll();
-
-
-/* gửi đúng 1 bản ghi lên Sheet — không đụng tới các bản ghi khác */
-
+const saveResult =
 await saveRecordRemote(record);
 
+if(!saveResult.success){
+  await loadReports();
+  return;
+}
+
+editingId = null;
 
 resetDraft();
 
-
-/* đồng bộ lại từ Sheet để chắc chắn khớp với mọi người */
+/* Đồng bộ dữ liệu mới nhất, bao gồm báo cáo người khác vừa nộp. */
 
 await loadReports();
+
+alert('Đã lưu báo cáo thành công.');
 
 });
 
@@ -3429,26 +3473,26 @@ if(
 )
 ) return;
 
-/* cập nhật UI ngay */
+/* Chờ Apps Script xác nhận rồi mới cập nhật giao diện. */
 
-reports =
-reports.filter(
-r =>
-r.id !== id
-);
+b.disabled = true;
 
-
-renderAll();
-
-
-/* xóa đúng bản ghi này trên Sheet */
-
+const deleteResult =
 await deleteRecordRemote(id);
 
-
-/* đồng bộ lại để chắc chắn */
+if(!deleteResult.success){
+  b.disabled = false;
+  await loadReports();
+  return;
+}
 
 await loadReports();
+
+if(deleteResult.deleted){
+  alert('Đã xóa báo cáo thành công.');
+}else{
+  alert('Không tìm thấy báo cáo. Có thể báo cáo đã được người khác xóa trước đó.');
+}
 
 });
 
