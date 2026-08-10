@@ -8,8 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-
 <style>
 :root{
   --bg:#F2F7F4;
@@ -649,17 +647,27 @@ STATUS TABLE
 
 .kpi-pie-grid{
   display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:14px;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:0;
   margin-top:20px;
-}
-
-.kpi-pie-card{
   border:1px solid var(--line);
   border-radius:14px;
   background:#fff;
-  padding:16px 10px 13px;
+  overflow:hidden;
+}
+
+.kpi-pie-card{
+  min-width:0;
+  border:0;
+  border-right:1px solid var(--line);
+  border-radius:0;
+  background:transparent;
+  padding:16px 8px 13px;
   text-align:center;
+}
+
+.kpi-pie-card:last-child{
+  border-right:0;
 }
 
 .kpi-pie-title{
@@ -678,8 +686,16 @@ STATUS TABLE
 
 .kpi-pie-canvas{
   width:100%;
-  height:180px;
+  height:140px;
   position:relative;
+  overflow:hidden;
+}
+
+.kpi-pie-canvas canvas{
+  display:block;
+  width:100% !important;
+  max-width:100%;
+  height:100% !important;
 }
 
 .pie-team-values{
@@ -712,19 +728,57 @@ STATUS TABLE
 
 @media(max-width:1000px){
   .kpi-pie-grid{
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  .kpi-pie-card{
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .kpi-pie-card:nth-child(3n){
+    border-right:0;
+  }
+
+  .kpi-pie-card:nth-child(n+4){
+    border-bottom:0;
   }
 }
 
 @media(max-width:700px){
   .kpi-pie-grid{
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .kpi-pie-card,
+  .kpi-pie-card:nth-child(3n){
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .kpi-pie-card:nth-child(2n){
+    border-right:0;
+  }
+
+  .kpi-pie-card:last-child{
+    border-bottom:0;
   }
 }
 
 @media(max-width:450px){
   .kpi-pie-grid{
     grid-template-columns:1fr;
+  }
+
+  .kpi-pie-card,
+  .kpi-pie-card:nth-child(2n),
+  .kpi-pie-card:nth-child(3n){
+    border-right:0;
+    border-bottom:1px solid var(--line);
+  }
+
+  .kpi-pie-card:last-child{
+    border-bottom:0;
   }
 }
 
@@ -1246,8 +1300,7 @@ Tổng hợp mục tiêu hôm nay
 class="sec-hint"
 style="margin-bottom:0;">
 
-Tỉ trọng mục tiêu của Team RMP và Team LS theo từng chỉ tiêu,
-cộng dồn từ báo cáo đầu ngày
+Tỉ trọng mục tiêu của Team RMP và Team LS theo từng chỉ tiêu.
 
 </p>
 
@@ -3760,6 +3813,90 @@ renderStatusTable
 5 PIE CHARTS
 ===================================================== */
 
+function getSummaryTargetTotals(date){
+
+const totals = {
+RMP:{tkHkd:0,cc:0,td:0,upl:0,phi:0},
+LS:{tkHkd:0,cc:0,td:0,upl:0,phi:0}
+};
+
+reports
+.filter(r => r.date === date && r.type === 'plan')
+.forEach(plan => {
+
+const team = plan.team || teamOf(plan.employee);
+
+if(!totals[team]) return;
+
+const t = plan.targets || {};
+
+totals[team].tkHkd += Number(t.tkHkd ?? t.tkCnkd) || 0;
+totals[team].cc += Number(t.cc) || 0;
+totals[team].td += Number(t.td) || 0;
+totals[team].upl += Number(t.upl) || 0;
+totals[team].phi += Number(t.phi) || 0;
+
+});
+
+return totals;
+
+}
+
+
+function drawNativePieChart(canvas,rmp,ls){
+
+const rect = canvas.getBoundingClientRect();
+const ratio = window.devicePixelRatio || 1;
+const width = Math.max(rect.width,180);
+const height = Math.max(rect.height,180);
+
+canvas.width = Math.round(width * ratio);
+canvas.height = Math.round(height * ratio);
+
+const ctx = canvas.getContext('2d');
+ctx.setTransform(ratio,0,0,ratio,0,0);
+ctx.clearRect(0,0,width,height);
+
+const total = rmp + ls;
+const cx = width / 2;
+const cy = height / 2;
+const radius = Math.max(22,Math.min(width,height) / 2 - 12);
+
+if(total <= 0){
+
+ctx.beginPath();
+ctx.arc(cx,cy,radius,0,Math.PI * 2);
+ctx.fillStyle = '#DCE8E1';
+ctx.fill();
+return;
+
+}
+
+let start = -Math.PI / 2;
+
+[
+{value:rmp,color:'#00733C'},
+{value:ls,color:'#B4880B'}
+].forEach(item => {
+
+if(item.value <= 0) return;
+
+const end = start + (item.value / total) * Math.PI * 2;
+ctx.beginPath();
+ctx.moveTo(cx,cy);
+ctx.arc(cx,cy,radius,start,end);
+ctx.closePath();
+ctx.fillStyle = item.color;
+ctx.fill();
+ctx.strokeStyle = '#FFFFFF';
+ctx.lineWidth = 3;
+ctx.stroke();
+start = end;
+
+});
+
+}
+
 function renderPieChart(){
 
 const date =
@@ -3788,88 +3925,7 @@ r.type === 'plan'
 TOTAL THEO TEAM
 */
 
-const teamTotals = {
-
-RMP:{
-tkHkd:0,
-cc:0,
-td:0,
-upl:0,
-phi:0
-},
-
-LS:{
-tkHkd:0,
-cc:0,
-td:0,
-upl:0,
-phi:0
-}
-
-};
-
-
-/*
-CỘNG TARGET
-*/
-
-plans.forEach(
-p => {
-
-const team =
-p.team;
-
-
-if(
-!teamTotals[team]
-) return;
-
-
-const t =
-p.targets || {};
-
-
-teamTotals[team].tkHkd +=
-Number(
-t.tkHkd ??
-t.tkCnkd
-)
-||
-0;
-
-
-teamTotals[team].cc +=
-Number(
-t.cc
-)
-||
-0;
-
-
-teamTotals[team].td +=
-Number(
-t.td
-)
-||
-0;
-
-
-teamTotals[team].upl +=
-Number(
-t.upl
-)
-||
-0;
-
-
-teamTotals[team].phi +=
-Number(
-t.phi
-)
-||
-0;
-
-});
+const teamTotals = getSummaryTargetTotals(date);
 
 
 /*
@@ -4052,143 +4108,8 @@ total > 0
 ];
 
 
-/*
-NEW CHART
-*/
-
-pieChartInstances[
-kpi.key
-] =
-
-new Chart(
-canvas,
-{
-
-type:'pie',
-
-data:{
-
-labels,
-
-datasets:[{
-
-data:
-dataValues,
-
-backgroundColor:
-colors,
-
-borderColor:
-'#FFFFFF',
-
-borderWidth:3,
-
-hoverOffset:4
-
-}]
-
-},
-
-
-options:{
-
-responsive:true,
-
-maintainAspectRatio:false,
-
-animation:{
-
-duration:500
-
-},
-
-plugins:{
-
-legend:{
-
-display:
-total > 0,
-
-position:'bottom',
-
-labels:{
-
-boxWidth:9,
-
-boxHeight:9,
-
-usePointStyle:true,
-
-pointStyle:'circle',
-
-padding:10,
-
-font:{
-
-family:'Inter',
-
-size:10,
-
-weight:'600'
-
-}
-
-}
-
-},
-
-
-tooltip:{
-
-enabled:
-total > 0,
-
-callbacks:{
-
-label:
-ctx => {
-
-const value =
-Number(
-ctx.parsed
-)
-||
-0;
-
-
-const pct =
-total
-
-? (
-(value / total)
-*
-100
-)
-.toFixed(1)
-
-: 0;
-
-
-return (
-`${ctx.label}: `
-+
-`${formatKpiNumber(value)} `
-+
-`(${pct}%)`
-);
-
-}
-
-}
-
-}
-
-}
-
-}
-
-}
-);
+/* Vẽ trực tiếp, không phụ thuộc CDN/Chart.js */
+drawNativePieChart(canvas,rmp,ls);
 
 });
 
@@ -4438,6 +4359,8 @@ r.date === date
 
 const lines = [];
 
+const summaryTeamTotals = getSummaryTargetTotals(date);
+
 
 lines.push(
 
@@ -4477,15 +4400,7 @@ lines.push(
 );
 
 
-const totals = {
-
-tkHkd:0,
-cc:0,
-td:0,
-upl:0,
-phi:0
-
-};
+const totals = summaryTeamTotals[team];
 
 
 teamEmployees.forEach(
@@ -4523,47 +4438,6 @@ if(plan){
 
 const t =
 plan.targets || {};
-
-
-totals.tkHkd +=
-Number(
-t.tkHkd ??
-t.tkCnkd
-)
-||
-0;
-
-
-totals.cc +=
-Number(
-t.cc
-)
-||
-0;
-
-
-totals.td +=
-Number(
-t.td
-)
-||
-0;
-
-
-totals.upl +=
-Number(
-t.upl
-)
-||
-0;
-
-
-totals.phi +=
-Number(
-t.phi
-)
-||
-0;
 
 
 lines.push(
