@@ -2481,8 +2481,7 @@ renderAll();
 
 
 /* =====================================================
-SAVE / DELETE ONE RECORD (không gửi cả mảng để tránh
-ghi đè mất báo cáo của người khác vừa nộp)
+SAVE ONE RECORD — APPEND ONLY
 ===================================================== */
 
 async function saveRecordRemote(record){
@@ -2540,62 +2539,6 @@ return {
 }
 
 
-async function deleteRecordRemote(id){
-
-try{
-
-const res = await fetch(
-SHEET_API_URL,
-{
-method:'POST',
-body: JSON.stringify({
-action:'delete',
-id: id
-})
-}
-);
-
-if(!res.ok){
-  throw new Error('Lỗi HTTP ' + res.status);
-}
-
-const result = await res.json();
-
-if(!result || result.status !== 'ok'){
-  throw new Error(
-    result && result.message
-      ? result.message
-      : 'Apps Script không xóa được báo cáo.'
-  );
-}
-
-return {
-  success:true,
-  deleted:result.deleted,
-  result:result
-};
-
-}catch(e){
-
-console.error(
-'Delete error',
-e
-);
-
-alert(
-'Không xóa được trên Google Sheet. Kiểm tra kết nối mạng và thử lại.'
-);
-
-return {
-  success:false,
-  error:e
-};
-
-}
-
-}
-
-
 /* =====================================================
 SAVE BUTTON
 ===================================================== */
@@ -2633,16 +2576,9 @@ return;
 }
 
 
-/*
-Xác định id: nếu đang bấm "Sửa" trên 1 báo cáo cụ thể thì
-dùng editingId để cập nhật đúng bản đó. Nếu tạo mới (kể cả
-trùng nhân viên + ngày + loại với báo cáo đã có) thì LUÔN
-tạo id mới — ghi nhận thêm một bản ghi riêng, không đè lên
-bản cũ, để giữ lại toàn bộ lịch sử các lần nộp trong ngày.
-*/
-
-let recordId =
-editingId || uid();
+/* Mỗi lần nhấn lưu luôn dùng ID tạm mới; Apps Script sẽ cấp
+ID chính thức mới và luôn thêm một dòng, không bao giờ update. */
+let recordId = uid();
 
 
 let record;
@@ -3051,13 +2987,7 @@ isManagerUnlocked
 <button
 class="edit"
 data-id="${r.id}">
-Sửa
-</button>
-
-<button
-class="del"
-data-id="${r.id}">
-Xóa
+Nộp lại từ bản này
 </button>
 
 </div>`
@@ -3445,61 +3375,11 @@ ${actionsHtml}
 .join('');
 
 
-/* DELETE */
+/* EDIT */
 
 if(
 isManagerUnlocked
 ){
-
-grid
-.querySelectorAll(
-'button.del'
-)
-.forEach(
-b => {
-
-b.addEventListener(
-'click',
-async ()=>{
-
-if(!isManagerUnlocked) return;
-
-const id =
-b.dataset.id;
-
-if(
-!confirm(
-'Xác nhận xóa báo cáo này? Hành động này không thể hoàn tác.'
-)
-) return;
-
-/* Chờ Apps Script xác nhận rồi mới cập nhật giao diện. */
-
-b.disabled = true;
-
-const deleteResult =
-await deleteRecordRemote(id);
-
-if(!deleteResult.success){
-  b.disabled = false;
-  await loadReports();
-  return;
-}
-
-await loadReports();
-
-if(deleteResult.deleted){
-  alert('Đã xóa báo cáo thành công.');
-}else{
-  alert('Không tìm thấy báo cáo. Có thể báo cáo đã được người khác xóa trước đó.');
-}
-
-});
-
-});
-
-
-/* EDIT */
 
 grid
 .querySelectorAll(
@@ -3523,8 +3403,8 @@ b.dataset.id
 if(!r) return;
 
 
-editingId =
-r.id;
+/* Chỉ nạp nội dung để nộp lại; không tái sử dụng ID cũ. */
+editingId = null;
 
 
 document
@@ -3582,7 +3462,7 @@ document
 'formTitle'
 )
 .textContent =
-'Chỉnh sửa báo cáo đầu ngày';
+'Nộp lại báo cáo đầu ngày (tạo bản ghi mới)';
 
 
 document
@@ -3696,7 +3576,7 @@ document
 'formTitle'
 )
 .textContent =
-'Chỉnh sửa báo cáo cuối ngày';
+'Nộp lại báo cáo cuối ngày (tạo bản ghi mới)';
 
 
 draft.achieved =
