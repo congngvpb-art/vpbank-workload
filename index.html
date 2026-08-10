@@ -2949,13 +2949,11 @@ return true;
 
 list.sort(
 (a,b)=>
-b.date.localeCompare(
-a.date
+(b.receivedAt || b.submittedAt || '').localeCompare(
+ a.receivedAt || a.submittedAt || ''
 )
-||
-a.employee.localeCompare(
-b.employee
-)
+|| b.date.localeCompare(a.date)
+|| a.employee.localeCompare(b.employee)
 );
 
 
@@ -3800,31 +3798,12 @@ renderStatusTable
 ===================================================== */
 
 /*
-Lấy bản ghi MỚI NHẤT cho mỗi (nhân viên + ngày + loại báo cáo),
-dùng riêng cho các phần TỔNG HỢP (KPI, báo cáo tổng, pie chart)
-để không bị cộng trùng khi 1 người nộp nhiều lần trong ngày.
-Phần "Báo cáo đã ghi nhận" vẫn hiển thị đầy đủ mọi lần nộp,
-không dùng hàm này.
+Trả về TOÀN BỘ lịch sử submit. Không gom theo nhân viên, ngày,
+team hoặc loại báo cáo. Hai lần submit giống hệt nhau vẫn là hai
+bản ghi độc lập trên mọi khu vực của web.
 */
 function getLatestRecords(){
-
-const map = new Map();
-
-reports.forEach(r=>{
-
-const key = r.employee + '|' + r.date + '|' + r.type;
-const existing = map.get(key);
-
-if(
-!existing ||
-(r.submittedAt || '') >= (existing.submittedAt || '')
-){
-map.set(key, r);
-}
-
-});
-
-return Array.from(map.values());
+return reports.slice();
 
 }
 
@@ -3925,9 +3904,7 @@ todayStr();
 
 
 /*
-CHỈ LẤY BÁO CÁO ĐẦU NGÀY — dùng bản mới nhất mỗi người
-để đếm số người đã nộp không bị lệch khi có người nộp
-nhiều lần trong ngày
+LẤY TOÀN BỘ BÁO CÁO ĐẦU NGÀY — mỗi lần submit đều được ghi nhận
 */
 
 const plans =
@@ -4368,8 +4345,7 @@ BUILD SUMMARY TEXT
 
 function buildSummaryText(date){
 
-/* Chỉ lấy bản mới nhất mỗi người để tổng hợp,
-tránh liệt kê/tính trùng khi ai đó nộp nhiều lần */
+/* Lấy toàn bộ lịch sử submit, kể cả các lần nộp trùng nhau. */
 const dayReports =
 getLatestRecords().filter(
 r =>
