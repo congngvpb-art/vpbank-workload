@@ -39,6 +39,8 @@
   .panel h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 4px;color:var(--ink);}
   .panel .sec-hint{color:var(--ink-soft);font-size:12.5px;margin:0 0 14px;}
 
+  .panel-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+
   .top-fields{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:20px;}
   @media(max-width:700px){.top-fields{grid-template-columns:1fr;}}
   .field label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em;}
@@ -79,6 +81,7 @@
   .btn-primary:hover{background:#00552C;}
   .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
   .btn-ghost:hover{background:var(--bg);}
+  .btn-ghost:disabled{opacity:.55;cursor:default;}
 
   /* report list */
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;}
@@ -106,6 +109,12 @@
   .rc-actions button:hover{color:var(--indigo);}
   .rc-actions button.del:hover{color:var(--red);}
   .empty-state{padding:40px;text-align:center;color:var(--ink-soft);font-size:14px;grid-column:1/-1;}
+
+  .refresh-btn{display:flex;align-items:center;gap:6px;}
+  .refresh-btn .spin{display:inline-block;transition:transform .5s;}
+  .refresh-btn.loading .spin{animation:spin .7s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .last-sync{font-size:11.5px;color:var(--ink-soft);margin-top:6px;text-align:right;}
 </style>
 </head>
 <body>
@@ -201,8 +210,17 @@
   <div id="managerSection" style="display:none;">
 
   <div class="panel">
-    <h2>Báo cáo đã ghi nhận</h2>
-    <div class="filters">
+    <div class="panel-head-row">
+      <div>
+        <h2>Báo cáo đã ghi nhận</h2>
+        <p class="sec-hint" style="margin-bottom:0;">Danh sách được lấy từ Google Sheet dùng chung</p>
+      </div>
+      <div>
+        <button class="btn btn-ghost refresh-btn" id="refreshBtn"><span class="spin">🔄</span> Cập nhật dữ liệu</button>
+        <div class="last-sync" id="lastSync"></div>
+      </div>
+    </div>
+    <div class="filters" style="margin-top:14px;">
       <div class="field"><label>Ngày</label><input type="date" id="filterDate"></div>
       <div class="field"><label>Team</label>
         <select id="filterTeam"><option value="">Tất cả</option><option value="RMP">Team RMP</option><option value="LS">Team LS</option></select>
@@ -277,6 +295,7 @@ let draft = {
 
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function fmtDateLabel(iso){ const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function fmtTimeLabel(d){ return d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}); }
 function shortName(full){ const parts = full.trim().split(' '); return parts[parts.length-1]; }
 function teamOf(name){ const e = EMPLOYEES.find(e=>e.name===name); return e ? e.team : ''; }
 function uid(){ return 'r'+Date.now()+Math.random().toString(16).slice(2,8); }
@@ -320,8 +339,6 @@ function renderAllDynamic(){
   renderBulletRows('reasonRows','reasons','VD: CNKD hẹn lại');
   renderBulletRows('actionRows','actions','VD: Tìm nguồn CTV, MGM khách mới');
 }
-
-document.getElementById('wrap-placeholder-unused'); // no-op guard
 
 document.addEventListener('input', (e)=>{
   const t = e.target;
@@ -614,6 +631,18 @@ document.getElementById('clearFilters').addEventListener('click', ()=>{
   renderReportsList();
 });
 
+/* ---------- manual refresh (manager) ---------- */
+async function refreshReports(){
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  await loadReports();
+  btn.classList.remove('loading');
+  btn.disabled = false;
+  document.getElementById('lastSync').textContent = 'Cập nhật lúc ' + fmtTimeLabel(new Date());
+}
+document.getElementById('refreshBtn').addEventListener('click', refreshReports);
+
 /* ---------- consolidated end-of-day summary ---------- */
 function buildSummaryText(date){
   const dayReports = reports.filter(r=>r.date===date);
@@ -692,7 +721,7 @@ document.getElementById('managerUnlockBtn').addEventListener('click', async ()=>
     document.getElementById('managerLock').style.display = 'none';
     document.getElementById('managerSection').style.display = '';
     document.getElementById('managerPass').value = '';
-    await loadReports();
+    await refreshReports();
   } else {
     alert('Sai mã truy cập. Vui lòng liên hệ quản lý để lấy mã.');
   }
