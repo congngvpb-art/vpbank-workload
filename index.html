@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
   :root{
     --bg:#F2F7F4; --surface:#FFFFFF; --ink:#173226; --ink-soft:#5B7166; --line:#DCE8E1;
@@ -63,8 +64,6 @@
   @media(max-width:760px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 
   .dyn-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
-  .dyn-row input[type=time]{max-width:110px;}
-  .dyn-row .arrow{color:var(--ink-soft);font-size:13px;}
   .dyn-row input[type=text]{flex:1;}
   .dyn-remove{
     background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;
@@ -82,6 +81,7 @@
   .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
   .btn-ghost:hover{background:var(--bg);}
   .btn-ghost:disabled{opacity:.55;cursor:default;}
+  .btn-sm{padding:7px 14px;font-size:12.5px;}
 
   /* report list */
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;}
@@ -115,6 +115,32 @@
   .refresh-btn.loading .spin{animation:spin .7s linear infinite;}
   @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
   .last-sync{font-size:11.5px;color:var(--ink-soft);margin-top:6px;text-align:right;}
+
+  /* manager inline gate */
+  .manager-box{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .manager-badge{
+    display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);
+    padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;
+  }
+  .manager-pass-input{width:150px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;}
+
+  /* status checklist */
+  .status-table{width:100%;border-collapse:collapse;}
+  .status-table th{
+    text-align:left;font-size:11px;text-transform:uppercase;color:var(--ink-soft);
+    padding:8px 10px;border-bottom:1px solid var(--line);letter-spacing:.03em;
+  }
+  .status-table td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--line);}
+  .status-table tr:last-child td{border-bottom:none;}
+  .team-row td{background:var(--bg);font-weight:700;color:var(--indigo);font-family:'Space Grotesk',sans-serif;font-size:12px;padding:7px 10px;}
+  .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+  .status-yes{background:var(--green-soft);color:var(--green);}
+  .status-no{background:var(--red-soft);color:var(--red);}
+
+  /* pie chart */
+  .chart-wrap{display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+  .chart-canvas-box{width:280px;height:280px;flex-shrink:0;position:relative;}
+  .chart-total-note{font-size:12.5px;color:var(--ink-soft);}
 </style>
 </head>
 <body>
@@ -198,25 +224,23 @@
     </div>
   </div>
 
-  <div class="panel" id="managerLock">
-    <h2>🔒 Khu vực Manager</h2>
-    <p class="sec-hint">Nhập mã truy cập để xem "Báo cáo đã ghi nhận" và "Báo cáo tổng hợp cuối ngày". Nhân viên vẫn nộp báo cáo bình thường ở phần trên mà không cần mã này.</p>
-    <div class="top-fields" style="grid-template-columns:1fr auto;align-items:end;">
-      <div class="field"><label>Mã truy cập</label><input type="password" id="managerPass" placeholder="Nhập mã manager"></div>
-      <button class="btn btn-primary" id="managerUnlockBtn">Mở khóa</button>
-    </div>
-  </div>
-
-  <div id="managerSection" style="display:none;">
-
+  <!-- BÁO CÁO ĐÃ GHI NHẬN — ai cũng xem được, chỉ manager mới sửa/xóa được -->
   <div class="panel">
     <div class="panel-head-row">
       <div>
         <h2>Báo cáo đã ghi nhận</h2>
-        <p class="sec-hint" style="margin-bottom:0;">Danh sách được lấy từ Google Sheet dùng chung</p>
+        <p class="sec-hint" style="margin-bottom:0;">Mọi người xem được toàn bộ báo cáo. Chỉ manager đăng nhập mới sửa/xóa được.</p>
       </div>
-      <div>
-        <button class="btn btn-ghost refresh-btn" id="refreshBtn"><span class="spin">🔄</span> Cập nhật dữ liệu</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <div class="manager-box" id="managerBoxLocked">
+          <input type="password" class="manager-pass-input" id="managerPass" placeholder="Mã manager">
+          <button class="btn btn-primary btn-sm" id="managerUnlockBtn">Đăng nhập</button>
+        </div>
+        <div class="manager-box" id="managerBoxUnlocked" style="display:none;">
+          <span class="manager-badge">✓ Manager</span>
+          <button class="btn btn-ghost btn-sm" id="managerLockAgainBtn">Đăng xuất</button>
+        </div>
+        <button class="btn btn-ghost btn-sm refresh-btn" id="refreshBtn"><span class="spin">🔄</span> Cập nhật dữ liệu</button>
         <div class="last-sync" id="lastSync"></div>
       </div>
     </div>
@@ -234,6 +258,39 @@
     <div class="reports-grid" id="reportsGrid"></div>
   </div>
 
+  <!-- TRẠNG THÁI ĐÃ ĐIỀN / CHƯA ĐIỀN -->
+  <div class="panel">
+    <div class="panel-head-row">
+      <div>
+        <h2>Trạng thái cập nhật nhân viên</h2>
+        <p class="sec-hint" style="margin-bottom:0;">Ai đã điền báo cáo, ai chưa điền — theo ngày đã chọn</p>
+      </div>
+      <div class="field" style="width:170px;"><label>Ngày</label><input type="date" id="statusDate"></div>
+    </div>
+    <table class="status-table">
+      <thead><tr><th>Nhân viên</th><th>Đầu ngày</th><th>Cuối ngày</th></tr></thead>
+      <tbody id="statusTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- PIE CHART TỔNG HỢP MỤC TIÊU -->
+  <div class="panel">
+    <div class="panel-head-row">
+      <div>
+        <h2>Tổng hợp mục tiêu hôm nay</h2>
+        <p class="sec-hint" style="margin-bottom:0;">Tỉ trọng các chỉ tiêu (TK HKD, CC, TD, UPL, PHÍ) cộng dồn từ báo cáo đầu ngày</p>
+      </div>
+      <div class="field" style="width:170px;"><label>Ngày</label><input type="date" id="pieDate"></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-canvas-box"><canvas id="targetPieChart"></canvas></div>
+      <div>
+        <div class="chart-total-note" id="pieEmptyNote"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BÁO CÁO TỔNG HỢP DẠNG VĂN BẢN -->
   <div class="panel">
     <h2>Báo cáo tổng hợp cuối ngày</h2>
     <p class="sec-hint">Gộp toàn bộ báo cáo đầu ngày &amp; cuối ngày của cả 2 team theo 1 ngày, để gửi hoặc lưu trữ</p>
@@ -244,15 +301,10 @@
       </div>
     </div>
     <textarea id="summaryOutput" rows="16" readonly placeholder="Bấm 'Tạo báo cáo tổng' để xem nội dung..." style="width:100%;font-family:'Inter',monospace;font-size:12.5px;line-height:1.6;margin-top:6px;white-space:pre-wrap;"></textarea>
-    <div class="actions-row" style="justify-content:space-between;border-top:none;padding-top:10px;">
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-ghost" id="copySummaryBtn">Sao chép</button>
-        <button class="btn btn-ghost" id="downloadSummaryBtn">Tải xuống .txt</button>
-      </div>
-      <button class="btn btn-ghost" id="managerLockAgainBtn" style="color:var(--red);border-color:var(--red-soft);">🔒 Khóa lại</button>
+    <div class="actions-row" style="justify-content:flex-start;border-top:none;padding-top:10px;">
+      <button class="btn btn-ghost" id="copySummaryBtn">Sao chép</button>
+      <button class="btn btn-ghost" id="downloadSummaryBtn">Tải xuống .txt</button>
     </div>
-  </div>
-
   </div>
 
 </div>
@@ -271,12 +323,15 @@ const EMPLOYEES = [
   {name:'Nguyễn Thái Nhật Duy', team:'LS'},
   {name:'Phạm Thị Nguyệt Hằng', team:'LS'},
 ];
-const STORAGE_KEY = 'workload:reports';
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbwvOxjEaULess0UzX-fR_mjx3fAZkh480bhwGjJKYdWeqBVCh0BQTFBocfg1xrfMhy_sA/exec';
 const MANAGER_PASSCODE = 'VPB2026';
+const PIE_COLORS = ['#00733C', '#00A651', '#B4880B', '#A6192E', '#5B7166'];
+
 let reports = [];
 let currentType = 'plan';
 let editingId = null;
+let isManagerUnlocked = false;
+let pieChartInstance = null;
 
 let draft = {
   schedule: [
@@ -479,6 +534,8 @@ function renderAll(){
   document.getElementById('todayPill').textContent = 'Hôm nay: ' + fmtDateLabel(todayStr());
   renderSummary();
   renderReportsList();
+  renderStatusTable();
+  renderPieChart();
 }
 function renderSummary(){
   const today = todayStr();
@@ -515,6 +572,9 @@ function renderReportsList(){
   }
 
   grid.innerHTML = list.map(r=>{
+    const actionsHtml = isManagerUnlocked
+      ? `<div class="rc-actions"><button class="edit" data-id="${r.id}">Sửa</button><button class="del" data-id="${r.id}">Xóa</button></div>`
+      : '';
     if(r.type==='plan'){
       const t = r.targets||{};
       const scheduleHtml = (r.schedule||[]).map(s=>`<li><b>${escapeHtml(s.label||'')}</b>: ${escapeHtml(s.task||'')}</li>`).join('');
@@ -539,10 +599,7 @@ function renderReportsList(){
             <ul>${scheduleHtml || '<li style="color:var(--ink-soft);">Chưa có lịch</li>'}</ul>
           </div>
         </div>
-        <div class="rc-actions">
-          <button class="edit" data-id="${r.id}">Sửa</button>
-          <button class="del" data-id="${r.id}">Xóa</button>
-        </div>
+        ${actionsHtml}
       </div>`;
     } else {
       const li = arr => (arr&&arr.length) ? arr.map(x=>`<li>${escapeHtml(x)}</li>`).join('') : '<li style="color:var(--ink-soft);">—</li>';
@@ -569,55 +626,140 @@ function renderReportsList(){
             <ul>${li(r.actions)}</ul>
           </div>
         </div>
-        <div class="rc-actions">
-          <button class="edit" data-id="${r.id}">Sửa</button>
-          <button class="del" data-id="${r.id}">Xóa</button>
-        </div>
+        ${actionsHtml}
       </div>`;
     }
   }).join('');
 
-  grid.querySelectorAll('button.del').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      reports = reports.filter(r=>r.id!==b.dataset.id);
-      await saveReports();
-      renderAll();
+  if(isManagerUnlocked){
+    grid.querySelectorAll('button.del').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        if(!isManagerUnlocked) return;
+        reports = reports.filter(r=>r.id!==b.dataset.id);
+        await saveReports();
+        renderAll();
+      });
+    });
+    grid.querySelectorAll('button.edit').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        if(!isManagerUnlocked) return;
+        const r = reports.find(r=>r.id===b.dataset.id);
+        if(!r) return;
+        editingId = r.id;
+        document.getElementById('fEmployee').value = r.employee;
+        document.getElementById('fDate').value = r.date;
+        document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active', x.dataset.type===r.type));
+        currentType = r.type;
+        if(r.type==='plan'){
+          document.getElementById('planForm').style.display = '';
+          document.getElementById('eodForm').style.display = 'none';
+          document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo đầu ngày';
+          document.getElementById('kpiTkHkd').value = r.targets?.tkHkd || r.targets?.tkCnkd || '';
+          document.getElementById('kpiCc').value = r.targets?.cc || '';
+          document.getElementById('kpiTd').value = r.targets?.td || '';
+          document.getElementById('kpiUpl').value = r.targets?.upl || '';
+          document.getElementById('kpiPhi').value = r.targets?.phi || '';
+          document.getElementById('kpiPipeline').value = r.pipeline || '';
+          draft.schedule = [{label:'8H - 9H',task:''},{label:'9H - 10H',task:''},{label:'10H - 12H',task:''},{label:'13H30 - 14H30',task:''},{label:'14H30 - 16H',task:''},{label:'16H - 17H30',task:''}].map(slot=>{ const old=(r.schedule||[]).find(x=>x.label===slot.label); return old ? {...slot,task:old.task||''} : slot; });
+        } else {
+          document.getElementById('planForm').style.display = 'none';
+          document.getElementById('eodForm').style.display = '';
+          document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo cuối ngày';
+          draft.achieved = r.achieved && r.achieved.length ? [...r.achieved] : [''];
+          draft.notAchieved = r.notAchieved && r.notAchieved.length ? [...r.notAchieved] : [''];
+          draft.reasons = r.reasons && r.reasons.length ? [...r.reasons] : [''];
+          draft.actions = r.actions && r.actions.length ? [...r.actions] : [''];
+        }
+        renderAllDynamic();
+        window.scrollTo({top:0, behavior:'smooth'});
+      });
+    });
+  }
+}
+
+/* ---------- trạng thái đã điền / chưa điền ---------- */
+function renderStatusTable(){
+  const date = document.getElementById('statusDate').value || todayStr();
+  const dayReports = reports.filter(r=>r.date===date);
+  const tbody = document.getElementById('statusTableBody');
+  let html = '';
+  ['RMP','LS'].forEach(team=>{
+    html += `<tr class="team-row"><td colspan="3">TEAM ${team}</td></tr>`;
+    EMPLOYEES.filter(e=>e.team===team).forEach(emp=>{
+      const hasPlan = dayReports.some(r=>r.employee===emp.name && r.type==='plan');
+      const hasEod = dayReports.some(r=>r.employee===emp.name && r.type==='eod');
+      html += `<tr>
+        <td>${escapeHtml(emp.name)}</td>
+        <td><span class="status-pill ${hasPlan?'status-yes':'status-no'}">${hasPlan?'✅ Đã điền':'⏳ Chưa điền'}</span></td>
+        <td><span class="status-pill ${hasEod?'status-yes':'status-no'}">${hasEod?'✅ Đã điền':'⏳ Chưa điền'}</span></td>
+      </tr>`;
     });
   });
-  grid.querySelectorAll('button.edit').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const r = reports.find(r=>r.id===b.dataset.id);
-      if(!r) return;
-      editingId = r.id;
-      document.getElementById('fEmployee').value = r.employee;
-      document.getElementById('fDate').value = r.date;
-      document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active', x.dataset.type===r.type));
-      currentType = r.type;
-      if(r.type==='plan'){
-        document.getElementById('planForm').style.display = '';
-        document.getElementById('eodForm').style.display = 'none';
-        document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo đầu ngày';
-        document.getElementById('kpiTkHkd').value = r.targets?.tkHkd || r.targets?.tkCnkd || '';
-        document.getElementById('kpiCc').value = r.targets?.cc || '';
-        document.getElementById('kpiTd').value = r.targets?.td || '';
-        document.getElementById('kpiUpl').value = r.targets?.upl || '';
-        document.getElementById('kpiPhi').value = r.targets?.phi || '';
-        document.getElementById('kpiPipeline').value = r.pipeline || '';
-        draft.schedule = [{label:'8H - 9H',task:''},{label:'9H - 10H',task:''},{label:'10H - 12H',task:''},{label:'13H30 - 14H30',task:''},{label:'14H30 - 16H',task:''},{label:'16H - 17H30',task:''}].map(slot=>{ const old=(r.schedule||[]).find(x=>x.label===slot.label); return old ? {...slot,task:old.task||''} : slot; });
-      } else {
-        document.getElementById('planForm').style.display = 'none';
-        document.getElementById('eodForm').style.display = '';
-        document.getElementById('formTitle').textContent = 'Chỉnh sửa báo cáo cuối ngày';
-        draft.achieved = r.achieved && r.achieved.length ? [...r.achieved] : [''];
-        draft.notAchieved = r.notAchieved && r.notAchieved.length ? [...r.notAchieved] : [''];
-        draft.reasons = r.reasons && r.reasons.length ? [...r.reasons] : [''];
-        draft.actions = r.actions && r.actions.length ? [...r.actions] : [''];
+  tbody.innerHTML = html;
+}
+document.getElementById('statusDate').addEventListener('change', renderStatusTable);
+
+/* ---------- pie chart tổng hợp mục tiêu ---------- */
+function renderPieChart(){
+  const date = document.getElementById('pieDate').value || todayStr();
+  const plans = reports.filter(r=>r.date===date && r.type==='plan');
+  const totals = {tkHkd:0, cc:0, td:0, upl:0, phi:0};
+  plans.forEach(p=>{
+    const t = p.targets || {};
+    totals.tkHkd += Number(t.tkHkd ?? t.tkCnkd) || 0;
+    totals.cc += Number(t.cc) || 0;
+    totals.td += Number(t.td) || 0;
+    totals.upl += Number(t.upl) || 0;
+    totals.phi += Number(t.phi) || 0;
+  });
+  const labels = ['TK HKD','CC','TD','UPL','PHÍ'];
+  const values = [totals.tkHkd, totals.cc, totals.td, totals.upl, totals.phi];
+  const grandTotal = values.reduce((a,b)=>a+b,0);
+  const noteEl = document.getElementById('pieEmptyNote');
+
+  const canvas = document.getElementById('targetPieChart');
+  if(pieChartInstance){ pieChartInstance.destroy(); pieChartInstance = null; }
+
+  if(grandTotal === 0){
+    noteEl.textContent = 'Chưa có mục tiêu nào được ghi nhận cho ngày này.';
+    return;
+  }
+  noteEl.textContent = `Tổng cộng: ${grandTotal} (từ ${plans.length} báo cáo đầu ngày)`;
+
+  if(typeof Chart === 'undefined'){
+    noteEl.textContent += ' — không tải được thư viện biểu đồ (kiểm tra kết nối mạng).';
+    return;
+  }
+
+  pieChartInstance = new Chart(canvas, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: PIE_COLORS,
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: (ctx)=>{
+              const pct = grandTotal ? ((ctx.parsed / grandTotal) * 100).toFixed(1) : 0;
+              return `${ctx.label}: ${ctx.parsed} (${pct}%)`;
+            }
+          }
+        }
       }
-      renderAllDynamic();
-      window.scrollTo({top:0, behavior:'smooth'});
-    });
+    }
   });
 }
+document.getElementById('pieDate').addEventListener('change', renderPieChart);
 
 document.getElementById('filterDate').addEventListener('change', renderReportsList);
 document.getElementById('filterTeam').addEventListener('change', renderReportsList);
@@ -631,7 +773,7 @@ document.getElementById('clearFilters').addEventListener('click', ()=>{
   renderReportsList();
 });
 
-/* ---------- manual refresh (manager) ---------- */
+/* ---------- manual refresh ---------- */
 async function refreshReports(){
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('loading');
@@ -643,7 +785,7 @@ async function refreshReports(){
 }
 document.getElementById('refreshBtn').addEventListener('click', refreshReports);
 
-/* ---------- consolidated end-of-day summary ---------- */
+/* ---------- consolidated end-of-day summary (text) ---------- */
 function buildSummaryText(date){
   const dayReports = reports.filter(r=>r.date===date);
   const lines = [];
@@ -714,30 +856,35 @@ document.getElementById('downloadSummaryBtn').addEventListener('click', ()=>{
   URL.revokeObjectURL(url);
 });
 
-/* ---------- manager access gate ---------- */
-document.getElementById('managerUnlockBtn').addEventListener('click', async ()=>{
+/* ---------- manager inline gate (chỉ ảnh hưởng quyền sửa/xóa) ---------- */
+document.getElementById('managerUnlockBtn').addEventListener('click', ()=>{
   const val = document.getElementById('managerPass').value;
   if(val === MANAGER_PASSCODE){
-    document.getElementById('managerLock').style.display = 'none';
-    document.getElementById('managerSection').style.display = '';
+    isManagerUnlocked = true;
     document.getElementById('managerPass').value = '';
-    await refreshReports();
+    document.getElementById('managerBoxLocked').style.display = 'none';
+    document.getElementById('managerBoxUnlocked').style.display = '';
+    renderReportsList();
   } else {
-    alert('Sai mã truy cập. Vui lòng liên hệ quản lý để lấy mã.');
+    alert('Sai mã truy cập.');
   }
 });
 document.getElementById('managerPass').addEventListener('keydown', (e)=>{
   if(e.key === 'Enter') document.getElementById('managerUnlockBtn').click();
 });
 document.getElementById('managerLockAgainBtn').addEventListener('click', ()=>{
-  document.getElementById('managerSection').style.display = 'none';
-  document.getElementById('managerLock').style.display = '';
+  isManagerUnlocked = false;
+  document.getElementById('managerBoxUnlocked').style.display = 'none';
+  document.getElementById('managerBoxLocked').style.display = '';
+  renderReportsList();
 });
 
 /* ---------- init ---------- */
 initEmployeeSelects();
 document.getElementById('fDate').value = todayStr();
 document.getElementById('summaryDate').value = todayStr();
+document.getElementById('statusDate').value = todayStr();
+document.getElementById('pieDate').value = todayStr();
 renderAllDynamic();
 loadReports();
 </script>
