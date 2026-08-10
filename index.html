@@ -1658,10 +1658,13 @@ CONFIG
 ===================================================== */
 
 const SHEET_API_URL =
-'https://script.google.com/macros/s/AKfycbySAh8U6WW6Wzh8d07erwvZibGJUiUD_F4eyfzBVLYQC7fGtaE88GldrJ1MN38AceZbJA/exec';
+'https://script.google.com/macros/s/AKfycbzAxxie_e-VJRIOid1MSgvznuyDVFcRA7LV3lCurEKtkbgxrgmH9Rx99u-KT1l6p-M3TA/exec';
 
 const MANAGER_PASSCODE =
 'VPB2026';
+
+const REQUIRED_API_VERSION =
+'append-only-v3';
 
 
 /* =====================================================
@@ -2488,6 +2491,33 @@ async function saveRecordRemote(record){
 
 try{
 
+/*
+Chặn ghi dữ liệu nếu website vẫn đang trỏ tới deployment Apps Script cũ.
+Backend cũ có thể cập nhật theo ID và làm mất bản submit trước đó.
+*/
+const healthRes = await fetch(
+SHEET_API_URL + '?check=' + Date.now(),
+{ cache:'no-store' }
+);
+
+if(!healthRes.ok){
+  throw new Error('Không kiểm tra được phiên bản Apps Script.');
+}
+
+const health = await healthRes.json();
+
+if(
+  !health ||
+  health.apiVersion !== REQUIRED_API_VERSION ||
+  health.appendOnly !== true
+){
+  throw new Error(
+    'Website đang kết nối với Apps Script phiên bản cũ. ' +
+    'Đã chặn submit để tránh ghi đè dữ liệu. Hãy deploy Code.gs ' +
+    'thành phiên bản mới và kiểm tra lại SHEET_API_URL.'
+  );
+}
+
 const res = await fetch(
 SHEET_API_URL,
 {
@@ -2510,6 +2540,20 @@ if(!result || result.status !== 'ok'){
     result && result.message
       ? result.message
       : 'Apps Script không lưu được báo cáo.'
+  );
+}
+
+if(
+  result.apiVersion !== REQUIRED_API_VERSION ||
+  result.appendOnly !== true ||
+  !result.record ||
+  !result.record.id ||
+  result.record.id === record.id ||
+  !String(result.record.id).startsWith('r_')
+){
+  throw new Error(
+    'Apps Script không xác nhận cơ chế append-only. ' +
+    'Đã dừng xử lý để tránh ghi đè dữ liệu.'
   );
 }
 
