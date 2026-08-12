@@ -1664,7 +1664,7 @@ const MANAGER_PASSCODE =
 'VPB2026';
 
 const REQUIRED_API_VERSION =
-'append-only-v3';
+'append-only-v4';
 
 
 /* =====================================================
@@ -1678,6 +1678,8 @@ let currentType = 'plan';
 let editingId = null;
 
 let isManagerUnlocked = false;
+
+let isSaving = false;
 
 
 /* 5 chart instances */
@@ -1796,6 +1798,20 @@ return (
 .toString(16)
 .slice(2,12)
 );
+
+}
+
+
+function submissionUid(){
+
+if(
+window.crypto &&
+typeof window.crypto.randomUUID === 'function'
+){
+  return 'sub_' + window.crypto.randomUUID();
+}
+
+return 'sub_' + uid() + '_' + Date.now();
 
 }
 
@@ -2603,6 +2619,17 @@ document
 'click',
 async ()=>{
 
+const saveBtn =
+document.getElementById('saveBtn');
+
+if(isSaving) return;
+
+isSaving = true;
+saveBtn.disabled = true;
+saveBtn.textContent = 'Đang gửi...';
+
+try{
+
 const employee =
 document
 .getElementById(
@@ -2630,9 +2657,13 @@ return;
 }
 
 
-/* Mỗi lần nhấn lưu luôn dùng ID tạm mới; Apps Script sẽ cấp
-ID chính thức mới và luôn thêm một dòng, không bao giờ update. */
+/* Mỗi lần nhấn lưu dùng ID tạm mới; Apps Script không bao giờ update
+dòng cũ và chỉ append khi request không bị xác định là duplicate. */
 let recordId = uid();
+
+/* Một submission_id được tạo đúng một lần cho một thao tác nhấn Lưu.
+Nếu mạng hoặc trình duyệt gửi lại cùng request, backend sẽ trả bản ghi cũ. */
+const submissionId = submissionUid();
 
 
 let record;
@@ -2648,18 +2679,20 @@ draft.schedule
 .map(
 r => ({
 label:r.label,
-task:r.task.trim()
+task:r.task
 })
 )
 
 .filter(
-r => r.task
+r => r.task.trim()
 );
 
 
 record = {
 
 id: recordId,
+
+submission_id: submissionId,
 
 type:'plan',
 
@@ -2710,7 +2743,7 @@ pipeline:
 document
 .getElementById(
 'kpiPipeline'
-).value.trim(),
+).value,
 
 schedule
 
@@ -2723,6 +2756,8 @@ else{
 record = {
 
 id: recordId,
+
+submission_id: submissionId,
 
 type:'eod',
 
@@ -2782,7 +2817,23 @@ resetDraft();
 
 await loadReports();
 
-alert('Đã lưu báo cáo thành công.');
+if(saveResult.result.duplicate){
+  alert(
+    'Báo cáo trùng 100% đã được ghi nhận trước đó lúc ' +
+    fmtTimeLabel(new Date(saveResult.result.record.receivedAt)) +
+    '. Hệ thống không tạo thêm bản ghi.'
+  );
+}else{
+  alert('Đã lưu báo cáo thành công.');
+}
+
+}finally{
+
+isSaving = false;
+saveBtn.disabled = false;
+saveBtn.textContent = 'Lưu báo cáo';
+
+}
 
 });
 
@@ -3852,9 +3903,9 @@ renderStatusTable
 ===================================================== */
 
 /*
-Trả về TOÀN BỘ lịch sử submit. Không gom theo nhân viên, ngày,
-team hoặc loại báo cáo. Hai lần submit giống hệt nhau vẫn là hai
-bản ghi độc lập trên mọi khu vực của web.
+Trả về TOÀN BỘ lịch sử đã được backend ghi nhận. Không gom theo nhân
+viên, ngày, team hoặc loại báo cáo. Duplicate bị backend chặn sẽ không
+tạo thêm dòng.
 */
 function getLatestRecords(){
 return reports.slice();
@@ -3958,7 +4009,7 @@ todayStr();
 
 
 /*
-LẤY TOÀN BỘ BÁO CÁO ĐẦU NGÀY — mỗi lần submit đều được ghi nhận
+LẤY TOÀN BỘ BÁO CÁO ĐẦU NGÀY — mỗi lần submit hợp lệ đều được ghi nhận
 */
 
 const plans =
@@ -4400,7 +4451,7 @@ BUILD SUMMARY TEXT
 
 function buildSummaryText(date){
 
-/* Lấy toàn bộ lịch sử submit, kể cả các lần nộp trùng nhau. */
+/* Lấy toàn bộ lịch sử submit đã được backend ghi nhận. */
 const dayReports =
 getLatestRecords().filter(
 r =>
