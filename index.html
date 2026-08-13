@@ -1658,7 +1658,7 @@ CONFIG
 ===================================================== */
 
 const SHEET_API_URL =
-'https://script.google.com/macros/s/AKfycbzpGQ72rIb74KgsAT1I4sFAA9WZLdNPh32RsjzfLe6FlCmmbdPprKfLJOJJTrmoIl0XBQ/exec';
+'https://script.google.com/macros/s/AKfycbzE_gpjCliN8Du2tisdA7rK7i7rq8fhlyVqbU4Pqztds7vnvWLfhrPdGk4dndIjA69bzw/exec';
 
 const MANAGER_PASSCODE =
 'VPB2026';
@@ -2745,9 +2745,28 @@ editingId = null;
 
 resetDraft();
 
-/* Đồng bộ dữ liệu mới nhất, bao gồm báo cáo người khác vừa nộp. */
+/*
+Thêm ngay bản ghi vừa lưu (do server trả về, đã có id/receivedAt chính thức)
+vào danh sách hiện có — KHÔNG tải lại toàn bộ dữ liệu từ Sheet.
+Dữ liệu trên Sheet không đổi, chỉ giảm 1 lượt gọi mạng không cần thiết.
+Nếu vì lý do nào đó server không trả về record, mới tải lại như cũ để đảm bảo an toàn.
+*/
+
+const newRecord =
+saveResult.result &&
+saveResult.result.record;
+
+if(newRecord){
+
+reports.unshift(newRecord);
+
+renderAll();
+
+}else{
 
 await loadReports();
+
+}
 
 alert('Đã lưu báo cáo thành công.');
 
