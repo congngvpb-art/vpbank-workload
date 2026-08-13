@@ -1663,10 +1663,6 @@ const SHEET_API_URL =
 const MANAGER_PASSCODE =
 'VPB2026';
 
-const REQUIRED_API_VERSION =
-'append-only-v4';
-
-
 /* =====================================================
 GLOBAL
 ===================================================== */
@@ -1798,20 +1794,6 @@ return (
 .toString(16)
 .slice(2,12)
 );
-
-}
-
-
-function submissionUid(){
-
-if(
-window.crypto &&
-typeof window.crypto.randomUUID === 'function'
-){
-  return 'sub_' + window.crypto.randomUUID();
-}
-
-return 'sub_' + uid() + '_' + Date.now();
 
 }
 
@@ -2517,33 +2499,6 @@ async function saveRecordRemote(record){
 
 try{
 
-/*
-Chặn ghi dữ liệu nếu website vẫn đang trỏ tới deployment Apps Script cũ.
-Backend cũ có thể cập nhật theo ID và làm mất bản submit trước đó.
-*/
-const healthRes = await fetch(
-SHEET_API_URL + '?check=' + Date.now(),
-{ cache:'no-store' }
-);
-
-if(!healthRes.ok){
-  throw new Error('Không kiểm tra được phiên bản Apps Script.');
-}
-
-const health = await healthRes.json();
-
-if(
-  !health ||
-  health.apiVersion !== REQUIRED_API_VERSION ||
-  health.appendOnly !== true
-){
-  throw new Error(
-    'Website đang kết nối với Apps Script phiên bản cũ. ' +
-    'Đã chặn submit để tránh ghi đè dữ liệu. Hãy deploy Code.gs ' +
-    'thành phiên bản mới và kiểm tra lại SHEET_API_URL.'
-  );
-}
-
 const res = await fetch(
 SHEET_API_URL,
 {
@@ -2566,20 +2521,6 @@ if(!result || result.status !== 'ok'){
     result && result.message
       ? result.message
       : 'Apps Script không lưu được báo cáo.'
-  );
-}
-
-if(
-  result.apiVersion !== REQUIRED_API_VERSION ||
-  result.appendOnly !== true ||
-  !result.record ||
-  !result.record.id ||
-  result.record.id === record.id ||
-  !String(result.record.id).startsWith('r_')
-){
-  throw new Error(
-    'Apps Script không xác nhận cơ chế append-only. ' +
-    'Đã dừng xử lý để tránh ghi đè dữ liệu.'
   );
 }
 
@@ -2657,13 +2598,8 @@ return;
 }
 
 
-/* Mỗi lần nhấn lưu dùng ID tạm mới; Apps Script không bao giờ update
-dòng cũ và chỉ append khi request không bị xác định là duplicate. */
+/* Mỗi lần nhấn lưu dùng một ID mới. */
 let recordId = uid();
-
-/* Một submission_id được tạo đúng một lần cho một thao tác nhấn Lưu.
-Nếu mạng hoặc trình duyệt gửi lại cùng request, backend sẽ trả bản ghi cũ. */
-const submissionId = submissionUid();
 
 
 let record;
@@ -2691,8 +2627,6 @@ r => r.task.trim()
 record = {
 
 id: recordId,
-
-submission_id: submissionId,
 
 type:'plan',
 
@@ -2757,8 +2691,6 @@ record = {
 
 id: recordId,
 
-submission_id: submissionId,
-
 type:'eod',
 
 employee,
@@ -2817,15 +2749,7 @@ resetDraft();
 
 await loadReports();
 
-if(saveResult.result.duplicate){
-  alert(
-    'Báo cáo trùng 100% đã được ghi nhận trước đó lúc ' +
-    fmtTimeLabel(new Date(saveResult.result.record.receivedAt)) +
-    '. Hệ thống không tạo thêm bản ghi.'
-  );
-}else{
-  alert('Đã lưu báo cáo thành công.');
-}
+alert('Đã lưu báo cáo thành công.');
 
 }finally{
 
@@ -3902,11 +3826,7 @@ renderStatusTable
 5 PIE CHARTS
 ===================================================== */
 
-/*
-Trả về TOÀN BỘ lịch sử đã được backend ghi nhận. Không gom theo nhân
-viên, ngày, team hoặc loại báo cáo. Duplicate bị backend chặn sẽ không
-tạo thêm dòng.
-*/
+/* Trả về toàn bộ lịch sử đã được backend ghi nhận. */
 function getLatestRecords(){
 return reports.slice();
 
