@@ -476,6 +476,63 @@ REPORT LIST
   margin-bottom:2px;
 }
 
+.overdue-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+  font-size:12px;
+}
+
+.overdue-table th,
+.overdue-table td{
+  border:1px solid var(--line);
+  padding:7px 9px;
+  text-align:left;
+  vertical-align:top;
+}
+
+.overdue-table th{
+  background:var(--bg);
+  color:var(--indigo);
+  font-weight:700;
+}
+
+.overdue-form-head{
+  display:grid;
+  grid-template-columns:1fr 2fr 36px;
+  gap:8px;
+  margin-bottom:6px;
+  padding:0 2px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+}
+
+.overdue-form-row{
+  display:grid;
+  grid-template-columns:1fr 2fr 36px;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.overdue-form-row input{
+  width:100%;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  color:var(--ink);
+}
+
+@media(max-width:650px){
+  .overdue-form-head{display:none;}
+  .overdue-form-row{grid-template-columns:1fr 36px;}
+  .overdue-form-row input[data-field="action"]{grid-column:1;}
+  .overdue-form-row .dyn-remove{grid-column:2;grid-row:1 / span 2;}
+}
+
 .kpi-line{
   display:flex;
   justify-content:space-between;
@@ -1034,9 +1091,13 @@ id="addActionRow">
 <span class="num">4</span>
 Kết quả thu hồi nợ quá hạn
 </div>
-<div class="field">
-<textarea id="eodOverdueResult" rows="3" placeholder="Nhập kết quả thu hồi nợ quá hạn..."></textarea>
+<div class="overdue-form-head">
+<span>Tên</span>
+<span>Action</span>
+<span></span>
 </div>
+<div id="overdueRows"></div>
+<button class="add-row-btn" id="addOverdueRow">+ Thêm dòng</button>
 </div>
 
 </div>
@@ -1721,7 +1782,9 @@ notAchieved:[''],
 
 reasons:[''],
 
-actions:['']
+actions:[''],
+
+overdueRows:[{name:'',action:''}]
 
 };
 
@@ -2010,6 +2073,22 @@ title="Xóa">
 
 }
 
+function renderOverdueRows(){
+
+const el = document.getElementById('overdueRows');
+
+el.innerHTML = draft.overdueRows.map((row,i)=>`
+<div class="overdue-form-row">
+  <input type="text" data-kind="overdueRows" data-field="name" data-i="${i}"
+    placeholder="Tên khách hàng" value="${escapeHtml(row.name || '')}">
+  <input type="text" data-kind="overdueRows" data-field="action" data-i="${i}"
+    placeholder="Action xử lý / kết quả thu hồi" value="${escapeHtml(row.action || '')}">
+  <button class="dyn-remove" data-kind="overdueRows" data-i="${i}" title="Xóa">✕</button>
+</div>
+`).join('');
+
+}
+
 
 /* =====================================================
 RENDER ALL DYNAMIC
@@ -2042,6 +2121,8 @@ renderBulletRows(
 'actions',
 'VD: Tìm nguồn CTV, MGM khách mới'
 );
+
+renderOverdueRows();
 
 }
 
@@ -2100,6 +2181,13 @@ t.value;
 
 }
 
+else if(kind === 'overdueRows'){
+
+const i = Number(t.dataset.i);
+draft.overdueRows[i][t.dataset.field] = t.value;
+
+}
+
 });
 
 
@@ -2141,8 +2229,13 @@ if(
 draft[kind].length === 0
 ){
 
-draft[kind].push('');
+draft[kind].push(kind === 'overdueRows' ? {name:'',action:''} : '');
 
+}
+
+if(kind === 'overdueRows'){
+renderOverdueRows();
+return;
 }
 
 
@@ -2250,6 +2343,17 @@ renderBulletRows(
 'actions',
 'VD: Tìm nguồn CTV, MGM khách mới'
 );
+
+});
+
+document
+.getElementById('addOverdueRow')
+.addEventListener(
+'click',
+()=>{
+
+draft.overdueRows.push({name:'',action:''});
+renderOverdueRows();
 
 });
 
@@ -2390,7 +2494,9 @@ notAchieved:[''],
 
 reasons:[''],
 
-actions:['']
+actions:[''],
+
+overdueRows:[{name:'',action:''}]
 
 };
 
@@ -2431,7 +2537,6 @@ document
 ).value = '';
 
 document.getElementById('kpiOverduePlan').value = '';
-document.getElementById('eodOverdueResult').value = '';
 
 
 document
@@ -2761,9 +2866,17 @@ draft.actions
 s => s.trim()
 ),
 
+overdueRows:
+teamOf(employee) === 'LS'
+? draft.overdueRows.filter(r => r.name.trim() || r.action.trim())
+: [],
+
 overdueResult:
 teamOf(employee) === 'LS'
-? document.getElementById('eodOverdueResult').value
+? draft.overdueRows
+    .filter(r => r.name.trim() || r.action.trim())
+    .map(r => `${r.name.trim()}${r.name.trim() && r.action.trim() ? ' - ' : ''}${r.action.trim()}`)
+    .join('\n')
 : ''
 
 };
@@ -3458,7 +3571,13 @@ ${
 r.team === 'LS'
 ? `<div class="blk">
 <div class="blk-title">4️⃣ Kết quả thu hồi nợ quá hạn</div>
-<div style="font-size:12px;white-space:pre-wrap;">${escapeHtml(r.overdueResult || '—')}</div>
+${
+Array.isArray(r.overdueRows) && r.overdueRows.length
+? `<table class="overdue-table"><thead><tr><th>Tên</th><th>Action</th></tr></thead><tbody>${r.overdueRows.map(row => `<tr><td>${escapeHtml(row.name || '')}</td><td>${escapeHtml(row.action || '')}</td></tr>`).join('')}</tbody></table>`
+: r.overdueResult
+  ? `<div style="font-size:12px;white-space:pre-wrap;">${escapeHtml(r.overdueResult)}</div>`
+  : '<div style="font-size:12px;color:var(--ink-soft);">—</div>'
+}
 </div>`
 : ''
 }
@@ -3719,7 +3838,12 @@ r.actions.length
 
 : [''];
 
-document.getElementById('eodOverdueResult').value = r.overdueResult || '';
+draft.overdueRows =
+Array.isArray(r.overdueRows) && r.overdueRows.length
+? r.overdueRows.map(row => ({name:row.name || '', action:row.action || ''}))
+: r.overdueResult
+  ? [{name:'',action:r.overdueResult}]
+  : [{name:'',action:''}];
 
 }
 
@@ -4634,7 +4758,13 @@ eod.actions.join('; ')
 
 }
 
-if(team === 'LS' && eod.overdueResult){
+if(team === 'LS' && Array.isArray(eod.overdueRows) && eod.overdueRows.length){
+lines.push('   Kết quả thu hồi nợ quá hạn:');
+eod.overdueRows.forEach(row => {
+lines.push(`      - ${row.name || '(Chưa nhập tên)'}: ${row.action || ''}`);
+});
+}
+else if(team === 'LS' && eod.overdueResult){
 lines.push(`   Kết quả thu hồi nợ quá hạn: ${eod.overdueResult}`);
 }
 
