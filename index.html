@@ -950,6 +950,11 @@ placeholder="VD: CC - Anh A, Cty XYZ...">
 
 </div>
 
+<div class="field" id="lsOverduePlanField" style="display:none;margin-top:14px;">
+<label>PA xử lý nợ quá hạn</label>
+<textarea id="kpiOverduePlan" rows="3" placeholder="Nhập phương án xử lý nợ quá hạn..."></textarea>
+</div>
+
 
 <div class="section-title">
 <span class="num">2</span>
@@ -1023,6 +1028,16 @@ class="add-row-btn"
 id="addActionRow">
 + Thêm action
 </button>
+
+<div id="lsOverdueEodField" style="display:none;">
+<div class="section-title">
+<span class="num">4</span>
+Kết quả thu hồi nợ quá hạn
+</div>
+<div class="field">
+<textarea id="eodOverdueResult" rows="3" placeholder="Nhập kết quả thu hồi nợ quá hạn..."></textarea>
+</div>
+</div>
 
 </div>
 
@@ -1784,6 +1799,13 @@ return e
 
 }
 
+function updateLsOnlyFields(){
+const employee = document.getElementById('fEmployee').value;
+const isLs = teamOf(employee) === 'LS';
+document.getElementById('lsOverduePlanField').style.display = isLs ? '' : 'none';
+document.getElementById('lsOverdueEodField').style.display = isLs ? '' : 'none';
+}
+
 
 function uid(){
 
@@ -1890,6 +1912,8 @@ ${escapeHtml(e.name)}
 });
 
 }
+
+document.getElementById('fEmployee').addEventListener('change', updateLsOnlyFields);
 
 
 /* =====================================================
@@ -2406,11 +2430,17 @@ document
 'kpiPipeline'
 ).value = '';
 
+document.getElementById('kpiOverduePlan').value = '';
+document.getElementById('eodOverdueResult').value = '';
+
 
 document
 .getElementById(
 'fEmployee'
 ).value = '';
+
+
+updateLsOnlyFields();
 
 
 renderAllDynamic();
@@ -2679,6 +2709,11 @@ document
 'kpiPipeline'
 ).value,
 
+overduePlan:
+teamOf(employee) === 'LS'
+? document.getElementById('kpiOverduePlan').value
+: '',
+
 schedule
 
 };
@@ -2724,7 +2759,12 @@ actions:
 draft.actions
 .filter(
 s => s.trim()
-)
+),
+
+overdueResult:
+teamOf(employee) === 'LS'
+? document.getElementById('eodOverdueResult').value
+: ''
 
 };
 
@@ -3209,6 +3249,14 @@ r.pipeline
 
 }
 
+${
+r.team === 'LS' && r.overduePlan
+? `<div style="margin-top:8px;font-size:12px;color:var(--ink-soft);">
+<b>PA xử lý nợ quá hạn:</b> ${escapeHtml(r.overduePlan)}
+</div>`
+: ''
+}
+
 </div>
 
 
@@ -3406,6 +3454,15 @@ r.actions
 
 </div>
 
+${
+r.team === 'LS'
+? `<div class="blk">
+<div class="blk-title">4️⃣ Kết quả thu hồi nợ quá hạn</div>
+<div style="font-size:12px;white-space:pre-wrap;">${escapeHtml(r.overdueResult || '—')}</div>
+</div>`
+: ''
+}
+
 </div>
 
 
@@ -3566,6 +3623,8 @@ r.pipeline
 ||
 '';
 
+document.getElementById('kpiOverduePlan').value = r.overduePlan || '';
+
 
 draft.schedule = [
 
@@ -3660,7 +3719,12 @@ r.actions.length
 
 : [''];
 
+document.getElementById('eodOverdueResult').value = r.overdueResult || '';
+
 }
+
+
+updateLsOnlyFields();
 
 
 renderAllDynamic();
@@ -4498,6 +4562,10 @@ lines.push(
 
 }
 
+if(team === 'LS' && plan.overduePlan){
+lines.push(`   PA xử lý nợ quá hạn: ${plan.overduePlan}`);
+}
+
 }
 
 else{
@@ -4564,6 +4632,10 @@ lines.push(
 eod.actions.join('; ')
 );
 
+}
+
+if(team === 'LS' && eod.overdueResult){
+lines.push(`   Kết quả thu hồi nợ quá hạn: ${eod.overdueResult}`);
 }
 
 }
